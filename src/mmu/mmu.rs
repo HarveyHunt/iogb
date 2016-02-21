@@ -40,7 +40,7 @@ impl Mmu {
             0xFE00...0xFE9F => 0, // OAM
             0xFF00...0xFF7F => 0, //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F],
-            _ => panic!("Can't read {:x}", addr),
+            _ => panic!("Can't read 0x{:x}", addr),
         }
     }
 
@@ -55,7 +55,7 @@ impl Mmu {
             0xFE00...0xFE9F => {} // OAM
             0xFF00...0xFF7F => {} //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F] = val,
-            _ => panic!("Can't write to {:x}", addr),
+            _ => panic!("Can't write to 0x{:x}", addr),
         }
     }
 
