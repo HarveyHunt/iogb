@@ -34,4 +34,28 @@ impl Cpu {
             mmu: mmu::Mmu::new(),
         }
     }
+
+    pub fn fetchb(&mut self) -> u8 {
+        let val = self.mmu.readb(self.reg.pc);
+        self.reg.pc += 1;
+        val
+    }
+
+    pub fn fetchw(&mut self) -> u16 {
+        let val = self.mmu.readw(self.reg.pc);
+        self.reg.pc += 2;
+        val
+    }
+
+    // Decode and execute, returning the number of ticks that execution took.
+    pub fn dexec(&mut self) -> u32 {
+        let op = self.fetchb();
+        match op {
+            inv => {
+                panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
+                       inv,
+                       self.regs.pc)
+            }
+        }
+    }
 }
