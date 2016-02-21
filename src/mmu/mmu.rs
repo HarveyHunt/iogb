@@ -1,27 +1,37 @@
 use std::fmt;
 
-const BIOS_SZ: usize = 0x100;
+use super::brom::{BROM_SZ, BOOTROM};
+
 const WRAM_SZ: usize = 0x8000;
 const ZRAM_SZ: usize = 0x7F;
 
 pub struct Mmu {
-    bios: [u8; BIOS_SZ], // 0x0000 -> 0x00FF
+    brom: [u8; BROM_SZ], // 0x0000 -> 0x00FF
     wram: [u8; WRAM_SZ], // 0xC000 -> 0xDFFF, shadowed @ 0xE000 -> 0xFDFF
     zram: [u8; ZRAM_SZ], // 0xFF80 -> 0xFFFF
+    boot_mode: bool, // Map brom into bottom of memory?
 }
 
 impl Mmu {
     pub fn new() -> Mmu {
         Mmu {
-            bios: [0; BIOS_SZ],
+            brom: BOOTROM,
             wram: [0; WRAM_SZ],
             zram: [0; ZRAM_SZ],
+            boot_mode: true,
         }
     }
 
     pub fn readb(&mut self, addr: u16) -> u8 {
         match addr {
-            0x0000...0x7FFF => 0, //0x0000 -> 0x3FFF MBC0, 0x4000 -> 0x7FFF MBCx
+            0x0000...0x00FF => {
+                if self.boot_mode {
+                    self.brom[addr as usize]
+                } else {
+                    0
+                }
+            }
+            0x0100...0x7FFF => 0, //0x0000 -> 0x3FFF MBC0, 0x4000 -> 0x7FFF MBCx
             0x8000...0x9FFF => 0, // GPU
             0xA000...0xBFFF => 0, //Cartridge RAM
             // TODO: 0xD000 -> 0xDFFF is banked on CGB
@@ -61,6 +71,6 @@ impl Mmu {
 
 impl fmt::Debug for Mmu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "mmu debug stub")
+        writeln!(f, "mmu: boot_mode: {}", self.boot_mode)
     }
 }
