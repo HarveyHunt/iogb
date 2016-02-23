@@ -61,6 +61,31 @@ impl Registers {
             _ => panic!("Unknown reg {:?}", reg),
         }
     }
+
+    pub fn writew(&mut self, reg: Regs, val: u16) {
+        use self::Regs::*;
+        match reg {
+            PC => self.pc = val,
+            SP => self.sp = val,
+            AF => {
+                self.a = (val >> 8) as u8;
+                self.f = val as u8
+            } 
+            BC => {
+                self.b = (val >> 8) as u8;
+                self.c = val as u8
+            } 
+            DE => {
+                self.d = (val >> 8) as u8;
+                self.e = val as u8
+            } 
+            HL => {
+                self.h = (val >> 8) as u8;
+                self.l = val as u8
+            } 
+            _ => panic!("Unknown reg {:?}", reg),
+        }
+    }
 }
 
 impl Cpu {
