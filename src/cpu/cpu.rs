@@ -13,6 +13,27 @@ pub enum Flags {
     Z = 0x80,
 }
 
+#[derive(Debug)]
+pub enum Regs {
+    // 8 bit
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    L,
+    // 16 bit
+    PC,
+    SP,
+    // Pairs
+    AF,
+    BC,
+    DE,
+    HL,
+}
+
 #[derive(Debug, Default)]
 struct Registers {
     a: u8,
@@ -25,6 +46,21 @@ struct Registers {
     l: u8,
     pc: u16,
     sp: u16,
+}
+
+impl Registers {
+    pub fn readw(&self, reg: Regs) -> u16 {
+        use self::Regs::*;
+        match reg {
+            PC => self.pc,
+            SP => self.sp,
+            AF => ((self.a as u16) << 8) | (self.f as u16),
+            BC => ((self.b as u16) << 8) | (self.c as u16),
+            DE => ((self.d as u16) << 8) | (self.e as u16),
+            HL => ((self.h as u16) << 8) | (self.l as u16),
+            _ => panic!("Unknown reg {:?}", reg),
+        }
+    }
 }
 
 impl Cpu {
