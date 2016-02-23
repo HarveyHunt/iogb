@@ -2,7 +2,7 @@ use mmu;
 
 #[derive(Debug)]
 pub struct Cpu {
-    reg: Registers,
+    regs: Registers,
     mmu: mmu::Mmu,
 }
 
@@ -30,20 +30,20 @@ struct Registers {
 impl Cpu {
     pub fn new() -> Cpu {
         Cpu {
-            reg: Registers::default(),
+            regs: Registers::default(),
             mmu: mmu::Mmu::new(),
         }
     }
 
     pub fn fetchb(&mut self) -> u8 {
-        let val = self.mmu.readb(self.reg.pc);
-        self.reg.pc += 1;
+        let val = self.mmu.readb(self.regs.pc);
+        self.regs.pc += 1;
         val
     }
 
     pub fn fetchw(&mut self) -> u16 {
-        let val = self.mmu.readw(self.reg.pc);
-        self.reg.pc += 2;
+        let val = self.mmu.readw(self.regs.pc);
+        self.regs.pc += 2;
         val
     }
 
