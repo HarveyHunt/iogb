@@ -22,7 +22,7 @@ impl Mmu {
         }
     }
 
-    pub fn readb(&mut self, addr: u16) -> u8 {
+    pub fn readb(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x00FF => {
                 if self.boot_mode {
