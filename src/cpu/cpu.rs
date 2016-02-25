@@ -18,6 +18,10 @@ trait ReadB {
     fn readb(&self, cpu: &mut Cpu) -> u8;
 }
 
+trait WriteB {
+    fn writeb(&self, cpu: &mut Cpu, val: u8);
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum RegsB {
     // 8 bit
@@ -41,6 +45,19 @@ impl ReadB for RegsW {
 impl ReadB for RegsB {
     fn readb(&self, cpu: &mut Cpu) -> u8 {
         cpu.regs.readb(*self)
+    }
+}
+
+impl WriteB for RegsW {
+    fn writeb(&self, cpu: &mut Cpu, val: u8) {
+        let addr = cpu.regs.readw(*self);
+        cpu.mmu.writeb(addr, val);
+    }
+}
+
+impl WriteB for RegsB {
+    fn writeb(&self, cpu: &mut Cpu, val: u8) {
+        cpu.regs.writeb(*self, val);
     }
 }
 
@@ -80,6 +97,19 @@ impl Registers {
             E => self.e,
             H => self.h,
             L => self.l,
+        }
+    }
+
+    pub fn writeb(&mut self, reg: RegsB, val: u8) {
+        use self::RegsB::*;
+        match reg {
+            A => self.a = val,
+            B => self.b = val,
+            C => self.c = val,
+            D => self.d = val,
+            E => self.e = val,
+            H => self.h = val,
+            L => self.l = val,
         }
     }
 
