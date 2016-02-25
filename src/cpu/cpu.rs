@@ -21,7 +21,6 @@ pub enum RegsB {
     C,
     D,
     E,
-    F,
     H,
     L,
 }
