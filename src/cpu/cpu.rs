@@ -170,6 +170,19 @@ impl Cpu {
         val
     }
 
+    pub fn set_flag(&mut self, flag: Flags, enable: bool) {
+        let bit = flag as u8;
+        self.regs.f = if enable {
+            self.regs.f | bit
+        } else {
+            self.regs.f & !bit
+        };
+    }
+
+    pub fn check_flag(&self, flag: Flags) -> bool {
+        self.regs.f & (flag as u8) > 0
+    }
+
     // Decode and execute, returning the number of ticks that execution took.
     pub fn dexec(&mut self) -> u32 {
         use self::RegsW::*;
