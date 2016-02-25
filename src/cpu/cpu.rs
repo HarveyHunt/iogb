@@ -13,6 +13,11 @@ pub enum Flags {
     Z = 0x80,
 }
 
+trait ReadB {
+    // TODO: Having &mut here is ugly
+    fn readb(&self, cpu: &mut Cpu) -> u8;
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum RegsB {
     // 8 bit
@@ -23,6 +28,20 @@ pub enum RegsB {
     E,
     H,
     L,
+}
+
+// We can use the 16 bit contents of a register pair as a pointer into memory.
+impl ReadB for RegsW {
+    fn readb(&self, cpu: &mut Cpu) -> u8 {
+        let addr = cpu.regs.readw(*self);
+        cpu.mmu.readb(addr)
+    }
+}
+
+impl ReadB for RegsB {
+    fn readb(&self, cpu: &mut Cpu) -> u8 {
+        cpu.regs.readb(*self)
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -51,6 +70,19 @@ struct Registers {
 }
 
 impl Registers {
+    pub fn readb(&self, reg: RegsB) -> u8 {
+        use self::RegsB::*;
+        match reg {
+            A => self.a,
+            B => self.b,
+            C => self.c,
+            D => self.d,
+            E => self.e,
+            H => self.h,
+            L => self.l,
+        }
+    }
+
     pub fn readw(&self, reg: RegsW) -> u16 {
         use self::RegsW::*;
         match reg {
