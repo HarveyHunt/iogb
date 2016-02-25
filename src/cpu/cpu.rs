@@ -13,7 +13,7 @@ pub enum Flags {
     Z = 0x80,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Regs {
     // 8 bit
     A,
@@ -110,13 +110,40 @@ impl Cpu {
 
     // Decode and execute, returning the number of ticks that execution took.
     pub fn dexec(&mut self) -> u32 {
+        use self::Regs::*;
         let op = self.fetchb();
         match op {
+            0x03 => self.incw(BC),
+            0x13 => self.incw(DE),
+            0x23 => self.incw(HL),
+            0x33 => self.incw(SP),
+            0x0B => self.decw(BC),
+            0x1B => self.decw(DE),
+            0x2B => self.decw(HL),
+            0x3B => self.decw(SP),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
                        inv,
                        self.regs.pc)
             }
         }
+    }
+
+    // INC ss
+    // Z N H C
+    // - - - - 8
+    fn incw(&mut self, reg: RegsW) -> u32 {
+        let val = self.regs.readw(reg).wrapping_add(1);
+        self.regs.writew(reg, val);
+        8
+    }
+
+    // DEC ss
+    // Z N H C
+    // - - - - 8
+    fn decw(&mut self, reg: RegsW) -> u32 {
+        let val = self.regs.readw(reg).wrapping_sub(1);
+        self.regs.writew(reg, val);
+        8
     }
 }
