@@ -14,7 +14,7 @@ pub enum Flags {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum Regs {
+pub enum RegsB {
     // 8 bit
     A,
     B,
@@ -24,7 +24,10 @@ pub enum Regs {
     F,
     H,
     L,
-    // 16 bit
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum RegsW {
     PC,
     SP,
     // Pairs
@@ -49,8 +52,8 @@ struct Registers {
 }
 
 impl Registers {
-    pub fn readw(&self, reg: Regs) -> u16 {
-        use self::Regs::*;
+    pub fn readw(&self, reg: RegsW) -> u16 {
+        use self::RegsW::*;
         match reg {
             PC => self.pc,
             SP => self.sp,
@@ -58,12 +61,11 @@ impl Registers {
             BC => ((self.b as u16) << 8) | (self.c as u16),
             DE => ((self.d as u16) << 8) | (self.e as u16),
             HL => ((self.h as u16) << 8) | (self.l as u16),
-            _ => panic!("Unknown reg {:?}", reg),
         }
     }
 
-    pub fn writew(&mut self, reg: Regs, val: u16) {
-        use self::Regs::*;
+    pub fn writew(&mut self, reg: RegsW, val: u16) {
+        use self::RegsW::*;
         match reg {
             PC => self.pc = val,
             SP => self.sp = val,
@@ -83,7 +85,6 @@ impl Registers {
                 self.h = (val >> 8) as u8;
                 self.l = val as u8
             } 
-            _ => panic!("Unknown reg {:?}", reg),
         }
     }
 }
@@ -110,7 +111,7 @@ impl Cpu {
 
     // Decode and execute, returning the number of ticks that execution took.
     pub fn dexec(&mut self) -> u32 {
-        use self::Regs::*;
+        use self::RegsW::*;
         let op = self.fetchb();
         match op {
             0x03 => self.incw(BC),
