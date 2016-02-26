@@ -186,10 +186,28 @@ impl Cpu {
     // Decode and execute, returning the number of ticks that execution took.
     pub fn dexec(&mut self) -> u32 {
         use self::RegsW::*;
+        use self::RegsB::*;
         let op = self.fetchb();
         match op {
             0x03 => self.incw(BC),
+            0x04 => self.inc(B),
+            0x05 => self.dec(B),
+            0x0C => self.inc(C),
+            0x0D => self.dec(C),
             0x13 => self.incw(DE),
+            0x14 => self.inc(D),
+            0x15 => self.dec(D),
+            0x1C => self.inc(E),
+            0x1D => self.dec(E),
+            0x24 => self.inc(H),
+            0x25 => self.dec(H),
+            0x2C => self.inc(L),
+            0x2D => self.dec(L),
+            // TODO: Maybe this should be clearer that we're using HL as a pointer...
+            0x34 => self.inc(HL),
+            0x35 => self.dec(HL),
+            0x3C => self.inc(A),
+            0x3D => self.dec(A),
             0x23 => self.incw(HL),
             0x33 => self.incw(SP),
             0x0B => self.decw(BC),
@@ -220,5 +238,37 @@ impl Cpu {
         let val = self.regs.readw(reg).wrapping_sub(1);
         self.regs.writew(reg, val);
         8
+    }
+
+    // INC r | (r)
+    // Z N H C
+    // Z 0 H - 4 (12)
+    fn inc<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        use self::Flags::*;
+        let val = addr.readb(self).wrapping_add(1);
+        self.set_flag(Z, val == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, (val & 0xF) == 0x0);
+        addr.writeb(self, val);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
+    }
+
+    // DEC r | (r)
+    // Z N H C
+    //
+    // Z 1 H -
+    fn dec<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        use self::Flags::*;
+        let val = addr.readb(self).wrapping_sub(1);
+        self.set_flag(Z, val == 0);
+        self.set_flag(N, true);
+        self.set_flag(H, (val & 0xF) == 0xF);
+        addr.writeb(self, val);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
+    }
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
     }
 }
