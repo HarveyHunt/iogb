@@ -1,7 +1,9 @@
 use mmu;
+use super::clk;
 
 #[derive(Debug)]
 pub struct Cpu {
+    clk: clk::Clock,
     regs: Registers,
     mmu: mmu::Mmu,
 }
@@ -153,6 +155,7 @@ impl Registers {
 impl Cpu {
     pub fn new() -> Cpu {
         Cpu {
+            clk: clk::Clock::default(),
             regs: Registers::default(),
             mmu: mmu::Mmu::new(),
         }
