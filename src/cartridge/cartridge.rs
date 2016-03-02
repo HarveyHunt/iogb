@@ -74,4 +74,7 @@ impl Cartridge {
             0 //TODO: Is this correct?
         }
     }
+
+    pub fn write_rom(&self, addr: u16, val: u8) {}
+    pub fn write_ram(&self, addr: u16, val: u8) {}
 }
