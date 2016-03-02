@@ -1,6 +1,7 @@
 use std::fmt;
 
 use super::brom::{BROM_SZ, BOOTROM};
+use cartridge::Cartridge;
 
 const WRAM_SZ: usize = 0x8000;
 const ZRAM_SZ: usize = 0x7F;
