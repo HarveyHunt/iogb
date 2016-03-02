@@ -1,4 +1,7 @@
 use std::iter;
+use std::path;
+use std::fs::File;
+use std::io::Read;
 
 const ROM_BANK_SZ: usize = 0x4000;
 const RAM_BANK_SZ: usize = 0x2000;
@@ -18,7 +21,9 @@ pub struct Cartridge {
 }
 
 impl Cartridge {
-    pub fn new(buf: Vec<u8>) -> Cartridge {
+    pub fn new(rom_name: &str) -> Cartridge {
+        // TODO: Pass this error further up.
+        let buf = Cartridge::open_rom(path::PathBuf::from(rom_name)).unwrap();
         // TODO: Maybe pull this buffer parsing into another function?
         let mbc = match buf[0x147] {
             0x00 => Mbc::None,
@@ -38,6 +43,14 @@ impl Cartridge {
             ram_bank: 0,
             ram_enable: 0,
         }
+    }
+
+    fn open_rom(path: path::PathBuf) -> Result<Vec<u8>, String> {
+        let mut data = vec![];
+        let mut file = try!(File::open(path).map_err(|e| format!("{}", e)));
+
+        try!(file.read_to_end(&mut data).map_err(|e| format!("{}", e)));
+        Ok(data)
     }
 
     pub fn read_rom(&self, addr: u16) -> u8 {
