@@ -1,7 +1,7 @@
 use std::fmt;
 
 use super::brom::{BROM_SZ, BOOTROM};
-use cartridge::Cartridge;
+use cartridge;
 
 const WRAM_SZ: usize = 0x8000;
 const ZRAM_SZ: usize = 0x7F;
@@ -10,19 +10,19 @@ pub struct Mmu {
     brom: [u8; BROM_SZ], // 0x0000 -> 0x00FF
     wram: [u8; WRAM_SZ], // 0xC000 -> 0xDFFF, shadowed @ 0xE000 -> 0xFDFF
     zram: [u8; ZRAM_SZ], // 0xFF80 -> 0xFFFF
-    cart: Cartridge,
+    cart: cartridge::Cartridge,
     boot_mode: bool, // Map brom into bottom of memory?
 }
 
 impl Mmu {
-    pub fn new() -> Mmu {
+    pub fn new(cart: cartridge::Cartridge) -> Mmu {
         Mmu {
             brom: BOOTROM,
             wram: [0; WRAM_SZ],
             zram: [0; ZRAM_SZ],
             // TODO: It feels weird having a cartidge embedded in the MMU....
             // Perhaps this address handling should be moved into gb.rs?
-            cart: Cartridge::new("foo"),
+            cart: cart,
             boot_mode: true,
         }
     }

@@ -1,4 +1,5 @@
 use cpu;
+use cartridge;
 
 #[derive(Debug)]
 pub struct GameBoy {
@@ -6,7 +7,7 @@ pub struct GameBoy {
 }
 
 impl GameBoy {
-    pub fn new() -> GameBoy {
-        GameBoy { cpu: cpu::Cpu::new() }
+    pub fn new(cart: cartridge::Cartridge) -> GameBoy {
+        GameBoy { cpu: cpu::Cpu::new(cart) }
     }
 }

@@ -1,4 +1,5 @@
 use mmu;
+use cartridge;
 use super::clk;
 
 #[derive(Debug)]
@@ -153,11 +154,11 @@ impl Registers {
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
+    pub fn new(cart: cartridge::Cartridge) -> Cpu {
         Cpu {
             clk: clk::Clock::default(),
             regs: Registers::default(),
-            mmu: mmu::Mmu::new(),
+            mmu: mmu::Mmu::new(cart),
         }
     }
 

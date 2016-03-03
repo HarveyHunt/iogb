@@ -13,7 +13,7 @@ fn main() {
     }
 
     let cart = cartridge::Cartridge::new(&args[1]);
-    let gb = gb::GameBoy::new();
+    let gb = gb::GameBoy::new(cart);
 
     println!("gb: {:?}", gb);
 }
