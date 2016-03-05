@@ -37,10 +37,21 @@ pub enum RegsB {
     L,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum RegsW {
+    PC,
+    SP,
+    // Pairs
+    AF,
+    BC,
+    DE,
+    HL,
+}
+
 // We can use the 16 bit contents of a register pair as a pointer into memory.
-impl ReadB for RegsW {
+impl ReadB for IndirectAddr {
     fn readb(&self, cpu: &mut Cpu) -> u8 {
-        let addr = cpu.regs.readw(*self);
+        let addr = cpu.iaddr(*self);
         cpu.mmu.readb(addr)
     }
 }
@@ -51,9 +62,9 @@ impl ReadB for RegsB {
     }
 }
 
-impl WriteB for RegsW {
+impl WriteB for IndirectAddr {
     fn writeb(&self, cpu: &mut Cpu, val: u8) {
-        let addr = cpu.regs.readw(*self);
+        let addr = cpu.iaddr(*self);
         cpu.mmu.writeb(addr, val);
     }
 }
@@ -65,14 +76,15 @@ impl WriteB for RegsB {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum RegsW {
-    PC,
+pub enum IndirectAddr {
     SP,
     // Pairs
     AF,
     BC,
     DE,
     HL,
+    HLP, // HL+
+    HLM, // HL-
 }
 
 #[derive(Debug, Default)]
@@ -162,6 +174,27 @@ impl Cpu {
         }
     }
 
+    pub fn iaddr(&mut self, reg: IndirectAddr) -> u16 {
+        use self::IndirectAddr::*;
+        match reg {
+            AF => self.regs.readw(self::RegsW::AF),
+            BC => self.regs.readw(self::RegsW::BC),
+            DE => self.regs.readw(self::RegsW::DE),
+            SP => self.regs.readw(self::RegsW::SP),
+            HL => self.regs.readw(self::RegsW::HL),
+            HLP => {
+                let val = self.regs.readw(self::RegsW::HL);
+                self.regs.writew(self::RegsW::HL, val.wrapping_add(1));
+                val
+            }
+            HLM => {
+                let val = self.regs.readw(self::RegsW::HL);
+                self.regs.writew(self::RegsW::HL, val.wrapping_sub(1));
+                val
+            }
+        }
+    }
+
     pub fn fetchb(&mut self) -> u8 {
         let val = self.mmu.readb(self.regs.pc);
         self.regs.pc += 1;
@@ -193,27 +226,26 @@ impl Cpu {
         use self::RegsB::*;
         let op = self.fetchb();
         match op {
-            0x02 => self.ld(BC, A),
+            0x02 => self.ld(self::IndirectAddr::BC, A),
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
             0x05 => self.dec(B),
-            0x0A => self.ld(A, BC),
+            0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0C => self.inc(C),
             0x0D => self.dec(C),
-            0x12 => self.ld(DE, A),
+            0x12 => self.ld(self::IndirectAddr::DE, A),
             0x13 => self.incw(DE),
             0x14 => self.inc(D),
             0x15 => self.dec(D),
-            0x1A => self.ld(A, DE),
+            0x1A => self.ld(A, self::IndirectAddr::DE),
             0x1C => self.inc(E),
             0x1D => self.dec(E),
             0x24 => self.inc(H),
             0x25 => self.dec(H),
             0x2C => self.inc(L),
             0x2D => self.dec(L),
-            // TODO: Maybe this should be clearer that we're using HL as a pointer...
-            0x34 => self.inc(HL),
-            0x35 => self.dec(HL),
+            0x34 => self.inc(self::IndirectAddr::HL),
+            0x35 => self.dec(self::IndirectAddr::HL),
             0x3C => self.inc(A),
             0x3D => self.dec(A),
             0x23 => self.incw(HL),
