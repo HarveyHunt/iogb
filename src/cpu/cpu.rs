@@ -193,14 +193,18 @@ impl Cpu {
         use self::RegsB::*;
         let op = self.fetchb();
         match op {
+            0x02 => self.ld(BC, A),
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
             0x05 => self.dec(B),
+            0x0A => self.ld(A, BC),
             0x0C => self.inc(C),
             0x0D => self.dec(C),
+            0x12 => self.ld(DE, A),
             0x13 => self.incw(DE),
             0x14 => self.inc(D),
             0x15 => self.dec(D),
+            0x1A => self.ld(A, DE),
             0x1C => self.inc(E),
             0x1D => self.dec(E),
             0x24 => self.inc(H),
@@ -272,6 +276,13 @@ impl Cpu {
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
     }
+
+    // LD d s | d (s) | (d) s
+    // Z N H C
+    // - - - - 4 (12)
+    fn ld<O: WriteB, I: ReadB>(&mut self, o: O, i: I) -> u32 {
+        let v = i.readb(self);
+        o.writeb(self, v);
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
     }
