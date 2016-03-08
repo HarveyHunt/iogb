@@ -16,15 +16,6 @@ pub enum Flags {
     Z = 0x80,
 }
 
-trait ReadB {
-    // TODO: Having &mut here is ugly
-    fn readb(&self, cpu: &mut Cpu) -> u8;
-}
-
-trait WriteB {
-    fn writeb(&self, cpu: &mut Cpu, val: u8);
-}
-
 #[derive(Debug, Copy, Clone)]
 pub enum RegsB {
     // 8 bit
@@ -46,6 +37,15 @@ pub enum RegsW {
     BC,
     DE,
     HL,
+}
+
+trait ReadB {
+    // TODO: Having &mut here is ugly
+    fn readb(&self, cpu: &mut Cpu) -> u8;
+}
+
+trait WriteB {
+    fn writeb(&self, cpu: &mut Cpu, val: u8);
 }
 
 // We can use the 16 bit contents of a register pair as a pointer into memory.
