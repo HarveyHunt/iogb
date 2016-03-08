@@ -10,4 +10,11 @@ impl GameBoy {
     pub fn new(cart: cartridge::Cartridge) -> GameBoy {
         GameBoy { cpu: cpu::Cpu::new(cart) }
     }
+
+    pub fn run(&mut self) {
+        loop {
+            // TODO: Interrupt handling needs adding...
+            self.cpu.dexec();
+        }
+    }
 }
