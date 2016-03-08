@@ -230,26 +230,34 @@ impl Cpu {
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
             0x05 => self.dec(B),
+            0x06 => self.ldi(B),
             0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0C => self.inc(C),
             0x0D => self.dec(C),
+            0x0E => self.ldi(C),
             0x12 => self.ld(self::IndirectAddr::DE, A),
             0x13 => self.incw(DE),
             0x14 => self.inc(D),
             0x15 => self.dec(D),
+            0x16 => self.ldi(D),
             0x1A => self.ld(A, self::IndirectAddr::DE),
             0x1C => self.inc(E),
             0x1D => self.dec(E),
+            0x1E => self.ldi(E),
             0x24 => self.inc(H),
             0x25 => self.dec(H),
+            0x26 => self.ldi(H),
             0x2C => self.inc(L),
             0x2D => self.dec(L),
+            0x2E => self.ldi(L),
             0x34 => self.inc(self::IndirectAddr::HL),
             0x35 => self.dec(self::IndirectAddr::HL),
+            0x36 => self.ldi(self::IndirectAddr::HL),
             0x3C => self.inc(A),
             0x3D => self.dec(A),
             0x23 => self.incw(HL),
             0x33 => self.incw(SP),
+            0x3E => self.ldi(A),
             0x0B => self.decw(BC),
             0x1B => self.decw(DE),
             0x2B => self.decw(HL),
@@ -317,5 +325,18 @@ impl Cpu {
         o.writeb(self, v);
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
+    }
+
+
+    // LD r d8 | (r) d8
+    // Z N H C
+    // - - - - 8 (12)
+    // Note: This isn't strictly a CPU instructions - it's just a clean way to
+    // implement LD for immediate data stored in the next byte.
+    fn ldi<O: WriteB>(&mut self, o: O) -> u32 {
+        let v = self.fetchb();
+        o.writeb(self, v);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        8
     }
 }
