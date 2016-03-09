@@ -231,6 +231,7 @@ impl Cpu {
             0x04 => self.inc(B),
             0x05 => self.dec(B),
             0x06 => self.ldi(B),
+            0x09 => self.addw(BC),
             0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0B => self.decw(BC),
             0x0C => self.inc(C),
@@ -241,6 +242,7 @@ impl Cpu {
             0x14 => self.inc(D),
             0x15 => self.dec(D),
             0x16 => self.ldi(D),
+            0x19 => self.addw(DE),
             0x1A => self.ld(A, self::IndirectAddr::DE),
             0x1B => self.decw(DE),
             0x1C => self.inc(E),
@@ -251,6 +253,7 @@ impl Cpu {
             0x24 => self.inc(H),
             0x25 => self.dec(H),
             0x26 => self.ldi(H),
+            0x29 => self.addw(HL),
             0x2A => self.ld(A, self::IndirectAddr::HLP),
             0x2B => self.decw(HL),
             0x2C => self.inc(L),
@@ -261,6 +264,7 @@ impl Cpu {
             0x34 => self.inc(self::IndirectAddr::HL),
             0x35 => self.dec(self::IndirectAddr::HL),
             0x36 => self.ldi(self::IndirectAddr::HL),
+            0x39 => self.addw(SP),
             0x3A => self.ld(A, self::IndirectAddr::HLM),
             0x3B => self.decw(SP),
             0x3C => self.inc(A),
@@ -406,6 +410,22 @@ impl Cpu {
         let v = self.fetchb();
         o.writeb(self, v);
         // TODO: Need to reflect how the timing is different for (r) and r.
+        8
+    }
+
+    // ADD HL ss
+    // Z N H C
+    // - 0 H C 8
+    fn addw(&mut self, ss: RegsW) -> u32 {
+        use self::Flags::*;
+        let hl = self.regs.readw(self::RegsW::HL);
+        let val = self.regs.readw(ss);
+        let out = val.wrapping_add(hl);
+
+        self.set_flag(N, false);
+        self.set_flag(H, (hl & 0x07FF) > 0x07FF + (val & 0x07FF));
+        self.set_flag(C, hl > 0xFFFF - val);
+        self.regs.writew(self::RegsW::HL, out);
         8
     }
 }
