@@ -348,6 +348,14 @@ impl Cpu {
             0x7D => self.ld(A, L),
             0x7E => self.ld(A, self::IndirectAddr::HL),
             0x7F => self.ld(A, A),
+            0xA0 => self.and(B),
+            0xA1 => self.and(C),
+            0xA2 => self.and(D),
+            0xA3 => self.and(E),
+            0xA4 => self.and(H),
+            0xA5 => self.and(L),
+            0xA6 => self.and(self::IndirectAddr::HL),
+            0xA7 => self.and(A),
             0xA8 => self.xor(B),
             0xA9 => self.xor(C),
             0xAA => self.xor(D),
@@ -366,6 +374,7 @@ impl Cpu {
             0xB7 => self.or(A),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xEE => self.xor(self::ImmediateB),
+            0xE6 => self.and(self::ImmediateB),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
@@ -495,6 +504,22 @@ impl Cpu {
         self.set_flag(Z, v == 0);
         self.set_flag(N, false);
         self.set_flag(H, false);
+        self.set_flag(C, false);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
+    }
+
+    // AND s | (s) | d8
+    // Z N H C
+    // Z 0 1 0 : 4 | 8 | 8
+    fn and<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let mut v = i.readb(self);
+        v &= self.regs.readb(self::RegsB::A);
+        self.regs.writeb(self::RegsB::A, v);
+        self.set_flag(Z, v == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, true);
         self.set_flag(C, false);
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
