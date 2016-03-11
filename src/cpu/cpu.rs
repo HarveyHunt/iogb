@@ -348,6 +348,14 @@ impl Cpu {
             0x7D => self.ld(A, L),
             0x7E => self.ld(A, self::IndirectAddr::HL),
             0x7F => self.ld(A, A),
+            0xA8 => self.xor(B),
+            0xA9 => self.xor(C),
+            0xAA => self.xor(D),
+            0xAB => self.xor(E),
+            0xAC => self.xor(H),
+            0xAD => self.xor(L),
+            0xAE => self.xor(self::IndirectAddr::HL),
+            0xAF => self.xor(A),
             0xB0 => self.or(B),
             0xB1 => self.or(C),
             0xB2 => self.or(D),
@@ -357,6 +365,7 @@ impl Cpu {
             0xB6 => self.or(self::IndirectAddr::HL),
             0xB7 => self.or(A),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
+            0xEE => self.xor(self::ImmediateB),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
@@ -466,6 +475,22 @@ impl Cpu {
         use self::Flags::*;
         let mut v = i.readb(self);
         v |= self.regs.readb(self::RegsB::A);
+        self.regs.writeb(self::RegsB::A, v);
+        self.set_flag(Z, v == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, false);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
+    }
+
+    // XOR s | (s) | d8
+    // Z N H C
+    // Z 0 0 0 : 4 | 8 | 8
+    fn xor<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let mut v = i.readb(self);
+        v ^= self.regs.readb(self::RegsB::A);
         self.regs.writeb(self::RegsB::A, v);
         self.set_flag(Z, v == 0);
         self.set_flag(N, false);
