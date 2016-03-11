@@ -348,8 +348,17 @@ impl Cpu {
             0x7D => self.ld(A, L),
             0x7E => self.ld(A, self::IndirectAddr::HL),
             0x7F => self.ld(A, A),
+            0xB0 => self.or(B),
+            0xB1 => self.or(C),
+            0xB2 => self.or(D),
+            0xB3 => self.or(E),
+            0xB4 => self.or(H),
+            0xB5 => self.or(L),
+            0xB6 => self.or(self::IndirectAddr::HL),
+            0xB7 => self.or(A),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
+            0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
@@ -448,6 +457,22 @@ impl Cpu {
         self.set_flag(C, hl > 0xFFFF - val);
         self.regs.writew(self::RegsW::HL, out);
         8
+    }
+
+    // OR s | (s) | d8
+    // Z N H C
+    // Z 0 0 0 : 4 | 8 | 8
+    fn or<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let mut v = i.readb(self);
+        v |= self.regs.readb(self::RegsB::A);
+        self.regs.writeb(self::RegsB::A, v);
+        self.set_flag(Z, v == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, false);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
     }
 
     // NOP
