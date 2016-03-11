@@ -227,6 +227,7 @@ impl Cpu {
         let op = self.fetchb();
         match op {
             0x00 => self.nop(),
+            0x01 => self.ldiw(BC),
             0x02 => self.ld(self::IndirectAddr::BC, A),
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
@@ -238,6 +239,7 @@ impl Cpu {
             0x0C => self.inc(C),
             0x0D => self.dec(C),
             0x0E => self.ldi(C),
+            0x11 => self.ldiw(DE),
             0x12 => self.ld(self::IndirectAddr::DE, A),
             0x13 => self.incw(DE),
             0x14 => self.inc(D),
@@ -249,6 +251,7 @@ impl Cpu {
             0x1C => self.inc(E),
             0x1D => self.dec(E),
             0x1E => self.ldi(E),
+            0x21 => self.ldiw(HL),
             0x22 => self.ld(self::IndirectAddr::HLP, A),
             0x23 => self.incw(HL),
             0x24 => self.inc(H),
@@ -260,6 +263,7 @@ impl Cpu {
             0x2C => self.inc(L),
             0x2D => self.dec(L),
             0x2E => self.ldi(L),
+            0x31 => self.ldiw(SP),
             0x32 => self.ld(self::IndirectAddr::HLM, A),
             0x33 => self.incw(SP),
             0x34 => self.inc(self::IndirectAddr::HL),
@@ -420,6 +424,15 @@ impl Cpu {
         o.writeb(self, v);
         // TODO: Need to reflect how the timing is different for (r) and r.
         8
+    }
+
+    // LD dd d16
+    // Z N H C
+    // - - - - 12
+    fn ldiw(&mut self, dd: RegsW) -> u32 {
+        let v = self.fetchw();
+        self.regs.writew(dd, v);
+        12
     }
 
     // ADD HL ss
