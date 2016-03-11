@@ -16,6 +16,8 @@ pub enum Flags {
     Z = 0x80,
 }
 
+pub struct ImmediateB;
+
 #[derive(Debug, Copy, Clone)]
 pub enum RegsB {
     // 8 bit
@@ -49,6 +51,7 @@ pub enum IndirectAddr {
     HL,
     HLP, // HL+
     HLM, // HL-
+    ZeroPage,
 }
 
 #[derive(Debug, Default)]
@@ -85,6 +88,12 @@ impl ReadB for IndirectAddr {
 impl ReadB for RegsB {
     fn readb(&self, cpu: &mut Cpu) -> u8 {
         cpu.regs.readb(*self)
+    }
+}
+
+impl ReadB for ImmediateB {
+    fn readb(&self, cpu: &mut Cpu) -> u8 {
+        cpu.fetchb()
     }
 }
 
@@ -174,9 +183,9 @@ impl Cpu {
         }
     }
 
-    pub fn iaddr(&mut self, reg: IndirectAddr) -> u16 {
+    pub fn iaddr(&mut self, ia: IndirectAddr) -> u16 {
         use self::IndirectAddr::*;
-        match reg {
+        match ia {
             AF => self.regs.readw(self::RegsW::AF),
             BC => self.regs.readw(self::RegsW::BC),
             DE => self.regs.readw(self::RegsW::DE),
@@ -192,6 +201,7 @@ impl Cpu {
                 self.regs.writew(self::RegsW::HL, val.wrapping_sub(1));
                 val
             }
+            ZeroPage => 0xFF00 + self.fetchb() as u16,
         }
     }
 
@@ -232,49 +242,49 @@ impl Cpu {
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
             0x05 => self.dec(B),
-            0x06 => self.ldib(B),
+            0x06 => self.ld(B, self::IndirectAddr::ZeroPage),
             0x09 => self.addw(BC),
             0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0B => self.decw(BC),
             0x0C => self.inc(C),
             0x0D => self.dec(C),
-            0x0E => self.ldib(C),
+            0x0E => self.ld(C, self::IndirectAddr::ZeroPage),
             0x11 => self.ldiw(DE),
             0x12 => self.ld(self::IndirectAddr::DE, A),
             0x13 => self.incw(DE),
             0x14 => self.inc(D),
             0x15 => self.dec(D),
-            0x16 => self.ldib(D),
+            0x16 => self.ld(D, self::IndirectAddr::ZeroPage),
             0x19 => self.addw(DE),
             0x1A => self.ld(A, self::IndirectAddr::DE),
             0x1B => self.decw(DE),
             0x1C => self.inc(E),
             0x1D => self.dec(E),
-            0x1E => self.ldib(E),
+            0x1E => self.ld(E, self::IndirectAddr::ZeroPage),
             0x21 => self.ldiw(HL),
             0x22 => self.ld(self::IndirectAddr::HLP, A),
             0x23 => self.incw(HL),
             0x24 => self.inc(H),
             0x25 => self.dec(H),
-            0x26 => self.ldib(H),
+            0x26 => self.ld(H, self::IndirectAddr::ZeroPage),
             0x29 => self.addw(HL),
             0x2A => self.ld(A, self::IndirectAddr::HLP),
             0x2B => self.decw(HL),
             0x2C => self.inc(L),
             0x2D => self.dec(L),
-            0x2E => self.ldib(L),
+            0x2E => self.ld(L, self::IndirectAddr::ZeroPage),
             0x31 => self.ldiw(SP),
             0x32 => self.ld(self::IndirectAddr::HLM, A),
             0x33 => self.incw(SP),
             0x34 => self.inc(self::IndirectAddr::HL),
             0x35 => self.dec(self::IndirectAddr::HL),
-            0x36 => self.ldib(self::IndirectAddr::HL),
+            0x36 => self.ld(self::IndirectAddr::HL, self::IndirectAddr::ZeroPage),
             0x39 => self.addw(SP),
             0x3A => self.ld(A, self::IndirectAddr::HLM),
             0x3B => self.decw(SP),
             0x3C => self.inc(A),
             0x3D => self.dec(A),
-            0x3E => self.ldib(A),
+            0x3E => self.ld(A, self::IndirectAddr::ZeroPage),
             0x40 => self.ld(B, B),
             0x41 => self.ld(B, C),
             0x42 => self.ld(B, D),
@@ -338,6 +348,8 @@ impl Cpu {
             0x7D => self.ld(A, L),
             0x7E => self.ld(A, self::IndirectAddr::HL),
             0x7F => self.ld(A, A),
+            0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
+            0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF9 => self.ldw(SP, HL),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
@@ -410,19 +422,6 @@ impl Cpu {
     fn ldw(&mut self, dd: RegsW, nn: RegsW) -> u32 {
         let v = self.regs.readw(nn);
         self.regs.writew(dd, v);
-        8
-    }
-
-
-    // LD r d8 | (r) d8
-    // Z N H C
-    // - - - - 8 (12)
-    // Note: This isn't strictly a CPU instructions - it's just a clean way to
-    // implement LD for immediate data stored in the next byte.
-    fn ldib<O: WriteB>(&mut self, o: O) -> u32 {
-        let v = self.fetchb();
-        o.writeb(self, v);
-        // TODO: Need to reflect how the timing is different for (r) and r.
         8
     }
 
