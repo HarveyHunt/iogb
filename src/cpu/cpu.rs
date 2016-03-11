@@ -226,6 +226,7 @@ impl Cpu {
         use self::RegsB::*;
         let op = self.fetchb();
         match op {
+            0x00 => self.nop(),
             0x02 => self.ld(self::IndirectAddr::BC, A),
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
@@ -435,5 +436,12 @@ impl Cpu {
         self.set_flag(C, hl > 0xFFFF - val);
         self.regs.writew(self::RegsW::HL, out);
         8
+    }
+
+    // NOP
+    // Z N H C
+    // - - - - 4
+    fn nop(&mut self) -> u32 {
+        4
     }
 }
