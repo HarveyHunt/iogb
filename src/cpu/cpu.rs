@@ -370,7 +370,7 @@ impl Cpu {
 
     // INC ss
     // Z N H C
-    // - - - - 8
+    // - - - - : 8
     fn incw(&mut self, reg: RegsW) -> u32 {
         let val = self.regs.readw(reg).wrapping_add(1);
         self.regs.writew(reg, val);
@@ -379,7 +379,7 @@ impl Cpu {
 
     // DEC ss
     // Z N H C
-    // - - - - 8
+    // - - - - : 8
     fn decw(&mut self, reg: RegsW) -> u32 {
         let val = self.regs.readw(reg).wrapping_sub(1);
         self.regs.writew(reg, val);
@@ -388,7 +388,7 @@ impl Cpu {
 
     // INC r | (r)
     // Z N H C
-    // Z 0 H - 4 (12)
+    // Z 0 H - : 4 | 12
     fn inc<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
         use self::Flags::*;
         let val = addr.readb(self).wrapping_add(1);
@@ -403,7 +403,7 @@ impl Cpu {
     // DEC r | (r)
     // Z N H C
     //
-    // Z 1 H -
+    // Z 1 H - : 4 | 8
     fn dec<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
         use self::Flags::*;
         let val = addr.readb(self).wrapping_sub(1);
@@ -415,9 +415,9 @@ impl Cpu {
         4
     }
 
-    // LD d s | d (s) | (d) s
+    // LD d s | d (s) | (d) s | (d8) s | d (d8)
     // Z N H C
-    // - - - - 4 (12)
+    // - - - - : 4 | 8 | 8 | 12 | 12
     fn ld<O: WriteB, I: ReadB>(&mut self, o: O, i: I) -> u32 {
         let v = i.readb(self);
         o.writeb(self, v);
@@ -427,7 +427,7 @@ impl Cpu {
 
     // LD dd nn
     // Z N H C
-    // - - - - 8
+    // - - - - : 8
     fn ldw(&mut self, dd: RegsW, nn: RegsW) -> u32 {
         let v = self.regs.readw(nn);
         self.regs.writew(dd, v);
@@ -436,7 +436,7 @@ impl Cpu {
 
     // LD dd d16
     // Z N H C
-    // - - - - 12
+    // - - - - : 12
     fn ldiw(&mut self, dd: RegsW) -> u32 {
         let v = self.fetchw();
         self.regs.writew(dd, v);
@@ -445,7 +445,7 @@ impl Cpu {
 
     // ADD HL ss
     // Z N H C
-    // - 0 H C 8
+    // - 0 H C : 8
     fn addw(&mut self, ss: RegsW) -> u32 {
         use self::Flags::*;
         let hl = self.regs.readw(self::RegsW::HL);
@@ -477,7 +477,7 @@ impl Cpu {
 
     // NOP
     // Z N H C
-    // - - - - 4
+    // - - - - : 4
     fn nop(&mut self) -> u32 {
         4
     }
