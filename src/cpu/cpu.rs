@@ -39,6 +39,32 @@ pub enum RegsW {
     HL,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum IndirectAddr {
+    SP,
+    // Pairs
+    AF,
+    BC,
+    DE,
+    HL,
+    HLP, // HL+
+    HLM, // HL-
+}
+
+#[derive(Debug, Default)]
+struct Registers {
+    a: u8,
+    b: u8,
+    c: u8,
+    d: u8,
+    e: u8,
+    f: u8,
+    h: u8,
+    l: u8,
+    pc: u16,
+    sp: u16,
+}
+
 trait ReadB {
     // TODO: Having &mut here is ugly
     fn readb(&self, cpu: &mut Cpu) -> u8;
@@ -73,32 +99,6 @@ impl WriteB for RegsB {
     fn writeb(&self, cpu: &mut Cpu, val: u8) {
         cpu.regs.writeb(*self, val);
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum IndirectAddr {
-    SP,
-    // Pairs
-    AF,
-    BC,
-    DE,
-    HL,
-    HLP, // HL+
-    HLM, // HL-
-}
-
-#[derive(Debug, Default)]
-struct Registers {
-    a: u8,
-    b: u8,
-    c: u8,
-    d: u8,
-    e: u8,
-    f: u8,
-    h: u8,
-    l: u8,
-    pc: u16,
-    sp: u16,
 }
 
 impl Registers {
