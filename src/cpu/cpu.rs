@@ -333,8 +333,7 @@ impl Cpu {
             0x7D => self.ld(A, L),
             0x7E => self.ld(A, self::IndirectAddr::HL),
             0x7F => self.ld(A, A),
-            // TODO: Need to implement ReadB for RegsW...
-            // 0xF9 => self.ld(SP, HL),
+            0xF9 => self.ldw(SP, HL),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
                        inv,
@@ -398,6 +397,15 @@ impl Cpu {
         o.writeb(self, v);
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
+    }
+
+    // LD dd nn
+    // Z N H C
+    // - - - - 8
+    fn ldw(&mut self, dd: RegsW, nn: RegsW) -> u32 {
+        let v = self.regs.readw(nn);
+        self.regs.writew(dd, v);
+        8
     }
 
 
