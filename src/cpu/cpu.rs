@@ -566,29 +566,21 @@ impl Cpu {
     // Z N H C
     // Z 1 H C : 4 | 8 | 8
     fn sub<I: ReadB>(&mut self, i: I) -> u32 {
-        use self::Flags::*;
-        let a = self.regs.readb(self::RegsB::A);
-        let val = i.readb(self);
-        let out = a.wrapping_sub(val);
-
-        self.set_flag(Z, out == 0);
-        self.set_flag(N, true);
-        self.set_flag(H, a & 0xF < val & 0xF);
-        self.set_flag(C, (a as u16) < (val as u16));
-        self.regs.writeb(self::RegsB::A, out);
-        // TODO: Need to reflect how the timing is different for (r) and r.
-        4
+        self.alu_subb(i, false)
     }
 
     // SBC s | (s) | d8
     // Z N H C
     // Z 1 H C : 4 | 8 | 8
-    // TODO: Share the logic with SUB
     fn sbc<I: ReadB>(&mut self, i: I) -> u32 {
+        self.alu_subb(i, true)
+    }
+
+    fn alu_subb<I: ReadB>(&mut self, i: I, use_carry: bool) -> u32 {
         use self::Flags::*;
         let a = self.regs.readb(self::RegsB::A);
         let val = i.readb(self);
-        let c = self.check_flag(C) as u8;
+        let c = (self.check_flag(C) && use_carry) as u8;
         let out = a.wrapping_sub(val).wrapping_sub(c);
 
         self.set_flag(Z, out == 0);
@@ -599,7 +591,6 @@ impl Cpu {
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
     }
-
 
     // OR s | (s) | d8
     // Z N H C
