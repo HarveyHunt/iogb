@@ -404,6 +404,14 @@ impl Cpu {
             0xB5 => self.or(L),
             0xB6 => self.or(self::IndirectAddr::HL),
             0xB7 => self.or(A),
+            0xB8 => self.cp(B),
+            0xB9 => self.cp(C),
+            0xBA => self.cp(D),
+            0xBB => self.cp(E),
+            0xBC => self.cp(H),
+            0xBD => self.cp(L),
+            0xBE => self.cp(self::IndirectAddr::HL),
+            0xBF => self.cp(A),
             0xC6 => self.add(self::ImmediateB),
             0xCE => self.adc(self::ImmediateB),
             0xD6 => self.sub(self::ImmediateB),
@@ -415,6 +423,7 @@ impl Cpu {
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
+            0xFE => self.cp(self::ImmediateB),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
                        inv,
@@ -590,6 +599,18 @@ impl Cpu {
         self.regs.writeb(self::RegsB::A, out);
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
+    }
+
+    // CP s | (s) | d8
+    // Z N H C
+    // Z 1 H C : 4 | 8 | 8
+    fn cp<I: ReadB>(&mut self, i: I) -> u32 {
+        // This is kind of ugly, but I prefer having alu_subb handle all
+        // changes to CPU state.
+        let a = self.regs.readb(self::RegsB::A);
+        let cycles = self.alu_subb(i, false);
+        self.regs.writeb(self::RegsB::A, a);
+        cycles
     }
 
     // OR s | (s) | d8
