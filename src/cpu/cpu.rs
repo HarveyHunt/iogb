@@ -536,28 +536,21 @@ impl Cpu {
     // Z N H C
     // Z 0 H C : 4 | 8 | 8
     fn add<I: ReadB>(&mut self, i: I) -> u32 {
-        use self::Flags::*;
-        let a = self.regs.readb(self::RegsB::A);
-        let val = i.readb(self);
-        let out = val.wrapping_add(a);
-
-        self.set_flag(Z, out == 0);
-        self.set_flag(N, false);
-        self.set_flag(H, (a & 0xF) > 0xF - (val & 0xF));
-        self.set_flag(C, a > 0xFF - val);
-        self.regs.writeb(self::RegsB::A, out);
-        4
+        self.alu_addb(i, false)
     }
 
     // ADC s | (s) | d8
     // Z N H C
     // Z 0 H C : 4 | 8 | 8
-    // TODO: Share the logic with add
     fn adc<I: ReadB>(&mut self, i: I) -> u32 {
+        self.alu_addb(i, true)
+    }
+
+    fn alu_addb<I: ReadB>(&mut self, i: I, use_carry: bool) -> u32 {
         use self::Flags::*;
         let a = self.regs.readb(self::RegsB::A);
         let val = i.readb(self);
-        let c = self.check_flag(C) as u8;
+        let c = (self.check_flag(C) && use_carry) as u8;
         let out = val.wrapping_add(a).wrapping_add(c);
 
         self.set_flag(Z, out == 0);
@@ -565,6 +558,7 @@ impl Cpu {
         self.set_flag(H, (a & 0xF) + c > 0xF - (val & 0xF));
         self.set_flag(C, a + c > 0xFF - val);
         self.regs.writeb(self::RegsB::A, out);
+        // FIXME: This isn't correct... :-(
         4
     }
 
