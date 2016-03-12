@@ -433,6 +433,7 @@ impl Cpu {
             0xBD => self.cp(L),
             0xBE => self.cp(self::IndirectAddr::HL),
             0xBF => self.cp(A),
+            0xC3 => self.jp(self::AddressW),
             0xC6 => self.add(self::ImmediateB),
             0xCE => self.adc(self::ImmediateB),
             0xD6 => self.sub(self::ImmediateB),
@@ -441,6 +442,7 @@ impl Cpu {
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
             0xE8 => self.addw_sp(),
+            0xE9 => self.jp(HL),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
@@ -724,5 +726,14 @@ impl Cpu {
         self.set_flag(H, false);
         self.set_flag(C, true);
         4
+    }
+
+    // JP nn
+    // Z N H C
+    // - - - - : 4
+    fn jp<I: ReadW>(&mut self, i: I) -> u32 {
+        let addr = i.readw(self);
+        self.regs.writew(self::RegsW::PC, addr);
+        16
     }
 }
