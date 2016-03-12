@@ -286,6 +286,7 @@ impl Cpu {
             0x3C => self.inc(A),
             0x3D => self.dec(A),
             0x3E => self.ld(A, self::IndirectAddr::ZeroPage),
+            0x3F => self.ccf(),
             0x40 => self.ld(B, B),
             0x41 => self.ld(B, C),
             0x42 => self.ld(B, D),
@@ -679,6 +680,18 @@ impl Cpu {
         self.set_flag(N, true);
         self.set_flag(H, true);
         self.regs.writeb(self::RegsB::A, val);
+        4
+    }
+
+    // CCF
+    // Z N H C
+    // - 0 0 C : 4
+    fn ccf(&mut self) -> u32 {
+        use self::Flags::*;
+        let c = self.check_flag(C);
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, !c);
         4
     }
 }
