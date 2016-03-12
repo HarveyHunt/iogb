@@ -24,7 +24,5 @@ fn main() {
     let cart = cartridge::Cartridge::new(rom);
     let mut gb = gb::GameBoy::new(cart);
 
-    println!("gb: {:?}", gb);
-
     gb.run();
 }

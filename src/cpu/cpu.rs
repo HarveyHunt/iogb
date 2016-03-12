@@ -428,9 +428,10 @@ impl Cpu {
             0xF9 => self.ldw(SP, HL),
             0xFE => self.cp(self::ImmediateB),
             inv => {
-                panic!("The instruction 0x{:x}@0x{:x} isn't implemented",
+                panic!("The instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
                        inv,
-                       self.regs.pc)
+                       self.regs.pc,
+                       self)
             }
         }
     }
