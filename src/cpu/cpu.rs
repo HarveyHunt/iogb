@@ -356,6 +356,14 @@ impl Cpu {
             0x85 => self.add(L),
             0x86 => self.add(self::IndirectAddr::HL),
             0x87 => self.add(A),
+            0x88 => self.adc(B),
+            0x89 => self.adc(C),
+            0x8A => self.adc(D),
+            0x8B => self.adc(E),
+            0x8C => self.adc(H),
+            0x8D => self.adc(L),
+            0x8E => self.adc(self::IndirectAddr::HL),
+            0x8F => self.adc(A),
             0xA0 => self.and(B),
             0xA1 => self.and(C),
             0xA2 => self.and(D),
@@ -381,6 +389,7 @@ impl Cpu {
             0xB6 => self.or(self::IndirectAddr::HL),
             0xB7 => self.or(A),
             0xC6 => self.add(self::ImmediateB),
+            0xCE => self.adc(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
@@ -518,6 +527,25 @@ impl Cpu {
         self.set_flag(N, false);
         self.set_flag(H, (a & 0xF) > 0xF - (val & 0xF));
         self.set_flag(C, a > 0xFF - val);
+        self.regs.writeb(self::RegsB::A, out);
+        4
+    }
+
+    // ADC s | (s) | d8
+    // Z N H C
+    // Z 0 H C : 4 | 8 | 8
+    // TODO: Share the logic with add
+    fn adc<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let a = self.regs.readb(self::RegsB::A);
+        let val = i.readb(self);
+        let c = self.check_flag(C) as u8;
+        let out = val.wrapping_add(a).wrapping_add(c);
+
+        self.set_flag(Z, out == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, (a & 0xF) + c > 0xF - (val & 0xF));
+        self.set_flag(C, a + c > 0xFF - val);
         self.regs.writeb(self::RegsB::A, out);
         4
     }
