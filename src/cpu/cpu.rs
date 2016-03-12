@@ -348,6 +348,14 @@ impl Cpu {
             0x7D => self.ld(A, L),
             0x7E => self.ld(A, self::IndirectAddr::HL),
             0x7F => self.ld(A, A),
+            0x80 => self.add(B),
+            0x81 => self.add(C),
+            0x82 => self.add(D),
+            0x83 => self.add(E),
+            0x84 => self.add(H),
+            0x85 => self.add(L),
+            0x86 => self.add(self::IndirectAddr::HL),
+            0x87 => self.add(A),
             0xA0 => self.and(B),
             0xA1 => self.and(C),
             0xA2 => self.and(D),
@@ -372,6 +380,7 @@ impl Cpu {
             0xB5 => self.or(L),
             0xB6 => self.or(self::IndirectAddr::HL),
             0xB7 => self.or(A),
+            0xC6 => self.add(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
@@ -475,6 +484,23 @@ impl Cpu {
         self.set_flag(C, hl > 0xFFFF - val);
         self.regs.writew(self::RegsW::HL, out);
         8
+    }
+
+    // ADD s | (s) | d8
+    // Z N H C
+    // Z 0 H C : 4 | 8 | 8
+    fn add<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let a = self.regs.readb(self::RegsB::A);
+        let val = i.readb(self);
+        let out = val.wrapping_add(a);
+
+        self.set_flag(Z, out == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, (a & 0xF) > 0xF - (val & 0xF));
+        self.set_flag(C, a > 0xFF - val);
+        self.regs.writeb(self::RegsB::A, out);
+        4
     }
 
     // OR s | (s) | d8
