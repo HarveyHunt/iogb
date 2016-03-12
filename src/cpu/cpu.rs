@@ -372,6 +372,14 @@ impl Cpu {
             0x95 => self.sub(L),
             0x96 => self.sub(self::IndirectAddr::HL),
             0x97 => self.sub(A),
+            0x98 => self.sbc(B),
+            0x99 => self.sbc(C),
+            0x9A => self.sbc(D),
+            0x9B => self.sbc(E),
+            0x9C => self.sbc(H),
+            0x9D => self.sbc(L),
+            0x9E => self.sbc(self::IndirectAddr::HL),
+            0x9F => self.sbc(A),
             0xA0 => self.and(B),
             0xA1 => self.and(C),
             0xA2 => self.and(D),
@@ -399,6 +407,7 @@ impl Cpu {
             0xC6 => self.add(self::ImmediateB),
             0xCE => self.adc(self::ImmediateB),
             0xD6 => self.sub(self::ImmediateB),
+            0xDE => self.sbc(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
@@ -576,6 +585,27 @@ impl Cpu {
         // TODO: Need to reflect how the timing is different for (r) and r.
         4
     }
+
+    // SBC s | (s) | d8
+    // Z N H C
+    // Z 1 H C : 4 | 8 | 8
+    // TODO: Share the logic with SUB
+    fn sbc<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let a = self.regs.readb(self::RegsB::A);
+        let val = i.readb(self);
+        let c = self.check_flag(C) as u8;
+        let out = a.wrapping_sub(val).wrapping_sub(c);
+
+        self.set_flag(Z, out == 0);
+        self.set_flag(N, true);
+        self.set_flag(H, a & 0xF < val & 0xF + c);
+        self.set_flag(C, (a as u16) < (val as u16) + (c as u16));
+        self.regs.writeb(self::RegsB::A, out);
+        // TODO: Need to reflect how the timing is different for (r) and r.
+        4
+    }
+
 
     // OR s | (s) | d8
     // Z N H C
