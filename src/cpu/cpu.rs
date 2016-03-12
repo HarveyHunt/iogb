@@ -273,6 +273,7 @@ impl Cpu {
             0x2C => self.inc(L),
             0x2D => self.dec(L),
             0x2E => self.ld(L, self::IndirectAddr::ZeroPage),
+            0x2F => self.cpl(),
             0x31 => self.ldiw(SP),
             0x32 => self.ld(self::IndirectAddr::HLM, A),
             0x33 => self.incw(SP),
@@ -665,6 +666,19 @@ impl Cpu {
     // Z N H C
     // - - - - : 4
     fn nop(&mut self) -> u32 {
+        4
+    }
+
+    // CPL
+    // Z N H C
+    // - 1 1 - : 4
+    // Cyberathlete Professional League?
+    fn cpl(&mut self) -> u32 {
+        use self::Flags::*;
+        let val = !self.regs.readb(self::RegsB::A);
+        self.set_flag(N, true);
+        self.set_flag(H, true);
+        self.regs.writeb(self::RegsB::A, val);
         4
     }
 }
