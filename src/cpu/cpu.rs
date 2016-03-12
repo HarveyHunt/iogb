@@ -384,6 +384,7 @@ impl Cpu {
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
+            0xE8 => self.addw_sp(),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
@@ -484,6 +485,24 @@ impl Cpu {
         self.set_flag(C, hl > 0xFFFF - val);
         self.regs.writew(self::RegsW::HL, out);
         8
+    }
+
+    // ADD SP e
+    // Z N H C
+    // 0 0 H C : 16
+    // TODO: Maybe we could treat r8 like ImmediateB - i.e. a pub struct...
+    fn addw_sp(&mut self) -> u32 {
+        use self::Flags::*;
+        let sp = self.regs.readw(self::RegsW::SP);
+        let val = self.fetchb() as i8 as i16 as u16;
+        let out = sp.wrapping_add(val);
+
+        self.set_flag(Z, false);
+        self.set_flag(N, false);
+        self.set_flag(H, (sp & 0x07FF) > 0x07FF + (val & 0x07FF));
+        self.set_flag(C, sp > 0xFFFF - val);
+        self.regs.writew(self::RegsW::SP, out);
+        16
     }
 
     // ADD s | (s) | d8
