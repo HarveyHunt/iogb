@@ -280,6 +280,7 @@ impl Cpu {
             0x34 => self.inc(self::IndirectAddr::HL),
             0x35 => self.dec(self::IndirectAddr::HL),
             0x36 => self.ld(self::IndirectAddr::HL, self::IndirectAddr::ZeroPage),
+            0x37 => self.scf(),
             0x39 => self.addw(SP),
             0x3A => self.ld(A, self::IndirectAddr::HLM),
             0x3B => self.decw(SP),
@@ -692,6 +693,17 @@ impl Cpu {
         self.set_flag(N, false);
         self.set_flag(H, false);
         self.set_flag(C, !c);
+        4
+    }
+
+    // SCF
+    // Z N H C
+    // - 0 0 1 : 4
+    fn scf(&mut self) -> u32 {
+        use self::Flags::*;
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, true);
         4
     }
 }
