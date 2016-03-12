@@ -364,6 +364,14 @@ impl Cpu {
             0x8D => self.adc(L),
             0x8E => self.adc(self::IndirectAddr::HL),
             0x8F => self.adc(A),
+            0x90 => self.sub(B),
+            0x91 => self.sub(C),
+            0x92 => self.sub(D),
+            0x93 => self.sub(E),
+            0x94 => self.sub(H),
+            0x95 => self.sub(L),
+            0x96 => self.sub(self::IndirectAddr::HL),
+            0x97 => self.sub(A),
             0xA0 => self.and(B),
             0xA1 => self.and(C),
             0xA2 => self.and(D),
@@ -390,6 +398,7 @@ impl Cpu {
             0xB7 => self.or(A),
             0xC6 => self.add(self::ImmediateB),
             0xCE => self.adc(self::ImmediateB),
+            0xD6 => self.sub(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
@@ -547,6 +556,24 @@ impl Cpu {
         self.set_flag(H, (a & 0xF) + c > 0xF - (val & 0xF));
         self.set_flag(C, a + c > 0xFF - val);
         self.regs.writeb(self::RegsB::A, out);
+        4
+    }
+
+    // SUB s | (s) | d8
+    // Z N H C
+    // Z 1 H C : 4 | 8 | 8
+    fn sub<I: ReadB>(&mut self, i: I) -> u32 {
+        use self::Flags::*;
+        let a = self.regs.readb(self::RegsB::A);
+        let val = i.readb(self);
+        let out = a.wrapping_sub(val);
+
+        self.set_flag(Z, out == 0);
+        self.set_flag(N, true);
+        self.set_flag(H, a & 0xF < val & 0xF);
+        self.set_flag(C, (a as u16) < (val as u16));
+        self.regs.writeb(self::RegsB::A, out);
+        // TODO: Need to reflect how the timing is different for (r) and r.
         4
     }
 
