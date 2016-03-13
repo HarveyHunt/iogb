@@ -301,12 +301,14 @@ impl Cpu {
             0x1C => self.inc(E),
             0x1D => self.dec(E),
             0x1E => self.ld(E, self::IndirectAddr::ZeroPage),
+            0x20 => self.jr_cond(self::Condition::NZ),
             0x21 => self.ldiw(HL),
             0x22 => self.ld(self::IndirectAddr::HLP, A),
             0x23 => self.incw(HL),
             0x24 => self.inc(H),
             0x25 => self.dec(H),
             0x26 => self.ld(H, self::IndirectAddr::ZeroPage),
+            0x28 => self.jr_cond(self::Condition::Z),
             0x29 => self.addw(HL),
             0x2A => self.ld(A, self::IndirectAddr::HLP),
             0x2B => self.decw(HL),
@@ -314,6 +316,7 @@ impl Cpu {
             0x2D => self.dec(L),
             0x2E => self.ld(L, self::IndirectAddr::ZeroPage),
             0x2F => self.cpl(),
+            0x30 => self.jr_cond(self::Condition::NC),
             0x31 => self.ldiw(SP),
             0x32 => self.ld(self::IndirectAddr::HLM, A),
             0x33 => self.incw(SP),
@@ -321,6 +324,7 @@ impl Cpu {
             0x35 => self.dec(self::IndirectAddr::HL),
             0x36 => self.ld(self::IndirectAddr::HL, self::IndirectAddr::ZeroPage),
             0x37 => self.scf(),
+            0x38 => self.jr_cond(self::Condition::C),
             0x39 => self.addw(SP),
             0x3A => self.ld(A, self::IndirectAddr::HLM),
             0x3B => self.decw(SP),
@@ -782,6 +786,19 @@ impl Cpu {
         let mut addr = self.fetchb() as i8 as i16;
         addr += self.regs.readw(self::RegsW::PC) as i16;
         self.regs.writew(self::RegsW::PC, addr as u16);
-        4
+        12
+    }
+
+    // JR cc e
+    // Z N H C
+    // - - - - : 12/8
+    fn jr_cond(&mut self, c: Condition) -> u32 {
+        let mut addr = self.fetchb() as i8 as i16;
+        if !c.test(self) {
+            return 8;
+        }
+        addr += self.regs.readw(self::RegsW::PC) as i16;
+        self.regs.writew(self::RegsW::PC, addr as u16);
+        12
     }
 }
