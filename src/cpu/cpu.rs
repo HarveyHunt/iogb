@@ -461,19 +461,23 @@ impl Cpu {
             0xBF => self.cp(A),
             0xC2 => self.jp_cond(self::Condition::NZ),
             0xC3 => self.jp(self::AddressW),
+            0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
             0xCA => self.jp_cond(self::Condition::Z),
             0xCE => self.adc(self::ImmediateB),
             0xD2 => self.jp_cond(self::Condition::NC),
+            0xD5 => self.push(DE),
             0xD6 => self.sub(self::ImmediateB),
             0xDA => self.jp_cond(self::Condition::C),
             0xDE => self.sbc(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
+            0xE5 => self.push(HL),
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
             0xE8 => self.addw_sp(),
             0xE9 => self.jp(HL),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
+            0xF5 => self.push(AF),
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
             0xFE => self.cp(self::ImmediateB),
@@ -800,5 +804,17 @@ impl Cpu {
         addr += self.regs.readw(self::RegsW::PC) as i16;
         self.regs.writew(self::RegsW::PC, addr as u16);
         12
+    }
+
+    // PUSH qq
+    // Z N H C
+    // - - - - 16
+    fn push(&mut self, reg: self::RegsW) -> u32 {
+        let val = self.regs.readw(reg);
+        let mut sp = self.regs.readw(self::RegsW::SP).wrapping_sub(1);
+        self.mmu.writeb(sp, (val >> 8) as u8);
+        sp = sp.wrapping_sub(1);
+        self.mmu.writeb(sp, val as u8);
+        16
     }
 }
