@@ -462,16 +462,20 @@ impl Cpu {
             0xC1 => self.pop(BC),
             0xC2 => self.jp_cond(self::Condition::NZ),
             0xC3 => self.jp(self::AddressW),
+            0xC4 => self.call_cond(self::Condition::NZ),
             0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
             0xCA => self.jp_cond(self::Condition::Z),
+            0xCC => self.call_cond(self::Condition::Z),
             0xCD => self.call(),
             0xCE => self.adc(self::ImmediateB),
             0xD1 => self.pop(DE),
             0xD2 => self.jp_cond(self::Condition::NC),
+            0xD4 => self.call_cond(self::Condition::NC),
             0xD5 => self.push(DE),
             0xD6 => self.sub(self::ImmediateB),
             0xDA => self.jp_cond(self::Condition::C),
+            0xDC => self.call_cond(self::Condition::C),
             0xDE => self.sbc(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xE1 => self.pop(HL),
@@ -849,6 +853,22 @@ impl Cpu {
         let new_pc = self.fetchw();
         let pc = self.regs.readw(self::RegsW::PC);
 
+        self.pushw(pc);
+        self.regs.writew(self::RegsW::PC, new_pc);
+        24
+    }
+
+    // CALL cc nn
+    // Z N H C
+    // - - - - 24/12
+    fn call_cond(&mut self, cond: Condition) -> u32 {
+        let new_pc = self.fetchw();
+
+        if !cond.test(self) {
+            return 12;
+        }
+
+        let pc = self.regs.readw(self::RegsW::PC);
         self.pushw(pc);
         self.regs.writew(self::RegsW::PC, new_pc);
         24
