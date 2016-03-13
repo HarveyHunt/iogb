@@ -17,6 +17,7 @@ pub enum Flags {
 }
 
 pub struct ImmediateB;
+pub struct AddressW;
 
 #[derive(Debug, Copy, Clone)]
 pub enum RegsB {
@@ -77,6 +78,11 @@ trait WriteB {
     fn writeb(&self, cpu: &mut Cpu, val: u8);
 }
 
+trait ReadW {
+    // TODO: Having &mut here is ugly
+    fn readw(&self, cpu: &mut Cpu) -> u16;
+}
+
 // We can use the 16 bit contents of a register pair as a pointer into memory.
 impl ReadB for IndirectAddr {
     fn readb(&self, cpu: &mut Cpu) -> u8 {
@@ -107,6 +113,18 @@ impl WriteB for IndirectAddr {
 impl WriteB for RegsB {
     fn writeb(&self, cpu: &mut Cpu, val: u8) {
         cpu.regs.writeb(*self, val);
+    }
+}
+
+impl ReadW for RegsW {
+    fn readw(&self, cpu: &mut Cpu) -> u16 {
+        cpu.regs.readw(*self)
+    }
+}
+
+impl ReadW for AddressW {
+    fn readw(&self, cpu: &mut Cpu) -> u16 {
+        cpu.fetchw()
     }
 }
 
