@@ -489,11 +489,11 @@ impl Cpu {
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xE1 => self.pop(HL),
             0xE5 => self.push(HL),
-            0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
             0xE7 => self.rst(0x20),
             0xE8 => self.addw_sp(),
             0xE9 => self.jp(HL),
+            0xEE => self.xor(self::ImmediateB),
             0xEF => self.rst(0x28),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF1 => self.pop(AF),
