@@ -465,6 +465,7 @@ impl Cpu {
             0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
             0xCA => self.jp_cond(self::Condition::Z),
+            0xCD => self.call(),
             0xCE => self.adc(self::ImmediateB),
             0xD1 => self.pop(DE),
             0xD2 => self.jp_cond(self::Condition::NC),
@@ -814,12 +815,17 @@ impl Cpu {
     // Z N H C
     // - - - - 16
     fn push(&mut self, reg: self::RegsW) -> u32 {
-        let val = self.regs.readw(reg);
+        let addr = self.regs.readw(reg);
+        self.pushw(addr);
+        16
+    }
+
+    fn pushw(&mut self, val: u16) {
         let mut sp = self.regs.readw(self::RegsW::SP).wrapping_sub(1);
         self.mmu.writeb(sp, (val >> 8) as u8);
         sp = sp.wrapping_sub(1);
         self.mmu.writeb(sp, val as u8);
-        16
+        self.regs.writew(self::RegsW::SP, sp);
     }
 
     // POP qq
@@ -834,5 +840,17 @@ impl Cpu {
         self.regs.writew(self::RegsW::SP, sp.wrapping_add(1));
         self.regs.writew(reg, val);
         12
+    }
+
+    // CALL nn
+    // Z N H C
+    // - - - - 24
+    fn call(&mut self) -> u32 {
+        let new_pc = self.fetchw();
+        let pc = self.regs.readw(self::RegsW::PC);
+
+        self.pushw(pc);
+        self.regs.writew(self::RegsW::PC, new_pc);
+        24
     }
 }
