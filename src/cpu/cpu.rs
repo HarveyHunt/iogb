@@ -459,22 +459,26 @@ impl Cpu {
             0xBD => self.cp(L),
             0xBE => self.cp(self::IndirectAddr::HL),
             0xBF => self.cp(A),
+            0xC0 => self.ret_cond(self::Condition::NZ),
             0xC1 => self.pop(BC),
             0xC2 => self.jp_cond(self::Condition::NZ),
             0xC3 => self.jp(self::AddressW),
             0xC4 => self.call_cond(self::Condition::NZ),
             0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
+            0xC8 => self.ret_cond(self::Condition::Z),
             0xC9 => self.ret(),
             0xCA => self.jp_cond(self::Condition::Z),
             0xCC => self.call_cond(self::Condition::Z),
             0xCD => self.call(),
             0xCE => self.adc(self::ImmediateB),
+            0xD0 => self.ret_cond(self::Condition::NC),
             0xD1 => self.pop(DE),
             0xD2 => self.jp_cond(self::Condition::NC),
             0xD4 => self.call_cond(self::Condition::NC),
             0xD5 => self.push(DE),
             0xD6 => self.sub(self::ImmediateB),
+            0xD8 => self.ret_cond(self::Condition::C),
             0xDA => self.jp_cond(self::Condition::C),
             0xDC => self.call_cond(self::Condition::C),
             0xDE => self.sbc(self::ImmediateB),
@@ -887,5 +891,18 @@ impl Cpu {
         let pc = self.popw();
         self.regs.writew(self::RegsW::PC, pc);
         16
+    }
+
+
+    // RET cc
+    // Z N H C
+    // - - - - 20/8
+    fn ret_cond(&mut self, cond: Condition) -> u32 {
+        if !cond.test(self) {
+            return 8;
+        }
+        let pc = self.popw();
+        self.regs.writew(self::RegsW::PC, pc);
+        20
     }
 }
