@@ -465,6 +465,7 @@ impl Cpu {
             0xC4 => self.call_cond(self::Condition::NZ),
             0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
+            0xC9 => self.ret(),
             0xCA => self.jp_cond(self::Condition::Z),
             0xCC => self.call_cond(self::Condition::Z),
             0xCD => self.call(),
@@ -837,13 +838,18 @@ impl Cpu {
     // - - - - 12
     // FIXME: POP AF affects _all_ flags, but I don't yet know how...
     fn pop(&mut self, reg: self::RegsW) -> u32 {
+        let val = self.popw();
+        self.regs.writew(reg, val);
+        12
+    }
+
+    fn popw(&mut self) -> u16 {
         let mut sp = self.regs.readw(self::RegsW::SP);
         let mut val = self.mmu.readb(sp) as u16;
         sp = sp.wrapping_add(1);
         val |= (self.mmu.readb(sp) as u16) << 8;
         self.regs.writew(self::RegsW::SP, sp.wrapping_add(1));
-        self.regs.writew(reg, val);
-        12
+        val
     }
 
     // CALL nn
@@ -872,5 +878,14 @@ impl Cpu {
         self.pushw(pc);
         self.regs.writew(self::RegsW::PC, new_pc);
         24
+    }
+
+    // RET
+    // Z N H C
+    // - - - - 16
+    fn ret(&mut self) -> u32 {
+        let pc = self.popw();
+        self.regs.writew(self::RegsW::PC, pc);
+        16
     }
 }
