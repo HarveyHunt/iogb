@@ -459,24 +459,28 @@ impl Cpu {
             0xBD => self.cp(L),
             0xBE => self.cp(self::IndirectAddr::HL),
             0xBF => self.cp(A),
+            0xC1 => self.pop(BC),
             0xC2 => self.jp_cond(self::Condition::NZ),
             0xC3 => self.jp(self::AddressW),
             0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
             0xCA => self.jp_cond(self::Condition::Z),
             0xCE => self.adc(self::ImmediateB),
+            0xD1 => self.pop(DE),
             0xD2 => self.jp_cond(self::Condition::NC),
             0xD5 => self.push(DE),
             0xD6 => self.sub(self::ImmediateB),
             0xDA => self.jp_cond(self::Condition::C),
             0xDE => self.sbc(self::ImmediateB),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
+            0xE1 => self.pop(HL),
             0xE5 => self.push(HL),
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
             0xE8 => self.addw_sp(),
             0xE9 => self.jp(HL),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
+            0xF1 => self.pop(AF),
             0xF5 => self.push(AF),
             0xF6 => self.or(self::ImmediateB),
             0xF9 => self.ldw(SP, HL),
@@ -816,5 +820,19 @@ impl Cpu {
         sp = sp.wrapping_sub(1);
         self.mmu.writeb(sp, val as u8);
         16
+    }
+
+    // POP qq
+    // Z N H C
+    // - - - - 12
+    // FIXME: POP AF affects _all_ flags, but I don't yet know how...
+    fn pop(&mut self, reg: self::RegsW) -> u32 {
+        let mut sp = self.regs.readw(self::RegsW::SP);
+        let mut val = self.mmu.readb(sp) as u16;
+        sp = sp.wrapping_add(1);
+        val |= (self.mmu.readb(sp) as u16) << 8;
+        self.regs.writew(self::RegsW::SP, sp.wrapping_add(1));
+        self.regs.writew(reg, val);
+        12
     }
 }
