@@ -466,35 +466,43 @@ impl Cpu {
             0xC4 => self.call_cond(self::Condition::NZ),
             0xC5 => self.push(BC),
             0xC6 => self.add(self::ImmediateB),
+            0xC7 => self.rst(0x00),
             0xC8 => self.ret_cond(self::Condition::Z),
             0xC9 => self.ret(),
             0xCA => self.jp_cond(self::Condition::Z),
             0xCC => self.call_cond(self::Condition::Z),
             0xCD => self.call(),
             0xCE => self.adc(self::ImmediateB),
+            0xCF => self.rst(0x08),
             0xD0 => self.ret_cond(self::Condition::NC),
             0xD1 => self.pop(DE),
             0xD2 => self.jp_cond(self::Condition::NC),
             0xD4 => self.call_cond(self::Condition::NC),
             0xD5 => self.push(DE),
             0xD6 => self.sub(self::ImmediateB),
+            0xD7 => self.rst(0x10),
             0xD8 => self.ret_cond(self::Condition::C),
             0xDA => self.jp_cond(self::Condition::C),
             0xDC => self.call_cond(self::Condition::C),
             0xDE => self.sbc(self::ImmediateB),
+            0xDF => self.rst(0x18),
             0xE0 => self.ld(self::IndirectAddr::ZeroPage, A), // LDH
             0xE1 => self.pop(HL),
             0xE5 => self.push(HL),
             0xEE => self.xor(self::ImmediateB),
             0xE6 => self.and(self::ImmediateB),
+            0xE7 => self.rst(0x20),
             0xE8 => self.addw_sp(),
             0xE9 => self.jp(HL),
+            0xEF => self.rst(0x28),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF1 => self.pop(AF),
             0xF5 => self.push(AF),
             0xF6 => self.or(self::ImmediateB),
+            0xF7 => self.rst(0x30),
             0xF9 => self.ldw(SP, HL),
             0xFE => self.cp(self::ImmediateB),
+            0xFF => self.rst(0x38),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
                        inv,
@@ -904,5 +912,15 @@ impl Cpu {
         let pc = self.popw();
         self.regs.writew(self::RegsW::PC, pc);
         20
+    }
+
+    // RST t
+    // Z N H C
+    // - - - - 16
+    fn rst(&mut self, addr: u8) -> u32 {
+        let pc = self.regs.readw(self::RegsW::PC);
+        self.pushw(pc);
+        self.regs.writew(self::RegsW::PC, addr as u16);
+        16
     }
 }
