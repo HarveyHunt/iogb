@@ -294,6 +294,7 @@ impl Cpu {
             0x14 => self.inc(D),
             0x15 => self.dec(D),
             0x16 => self.ld(D, self::IndirectAddr::ZeroPage),
+            0x18 => self.jr(),
             0x19 => self.addw(DE),
             0x1A => self.ld(A, self::IndirectAddr::DE),
             0x1B => self.decw(DE),
@@ -772,5 +773,15 @@ impl Cpu {
         }
         self.regs.writew(self::RegsW::PC, addr);
         16
+    }
+
+    // JR e
+    // Z N H C
+    // - - - - : 12
+    fn jr(&mut self) -> u32 {
+        let mut addr = self.fetchb() as i8 as i16;
+        addr += self.regs.readw(self::RegsW::PC) as i16;
+        self.regs.writew(self::RegsW::PC, addr as u16);
+        4
     }
 }
