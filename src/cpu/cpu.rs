@@ -470,6 +470,7 @@ impl Cpu {
             0xC8 => self.ret_cond(self::Condition::Z),
             0xC9 => self.ret(),
             0xCA => self.jp_cond(self::Condition::Z),
+            0xCB => self.cb_dexec(),
             0xCC => self.call_cond(self::Condition::Z),
             0xCD => self.call(),
             0xCE => self.adc(self::ImmediateB),
@@ -505,6 +506,20 @@ impl Cpu {
             0xFF => self.rst(0x38),
             inv => {
                 panic!("The instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
+                       inv,
+                       self.regs.pc,
+                       self)
+            }
+        }
+    }
+
+    fn cb_dexec(&mut self) -> u32 {
+        use self::RegsW::*;
+        use self::RegsB::*;
+        let op = self.fetchb();
+        match op {
+            inv => {
+                panic!("The CB instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
                        inv,
                        self.regs.pc,
                        self)
