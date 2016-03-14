@@ -282,6 +282,7 @@ impl Cpu {
             0x04 => self.inc(B),
             0x05 => self.dec(B),
             0x06 => self.ld(B, self::IndirectAddr::ZeroPage),
+            0x07 => self.rlca(),
             0x09 => self.addw(BC),
             0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0B => self.decw(BC),
@@ -294,6 +295,7 @@ impl Cpu {
             0x14 => self.inc(D),
             0x15 => self.dec(D),
             0x16 => self.ld(D, self::IndirectAddr::ZeroPage),
+            0x17 => self.rla(),
             0x18 => self.jr(),
             0x19 => self.addw(DE),
             0x1A => self.ld(A, self::IndirectAddr::DE),
@@ -937,5 +939,30 @@ impl Cpu {
         self.pushw(pc);
         self.regs.writew(self::RegsW::PC, addr as u16);
         16
+    }
+
+    // RLCA
+    // Z N H C
+    // 0 0 0 C 4
+    fn rlca(&mut self) -> u32 {
+        self.alu_rla(true)
+    }
+
+    // RLA
+    // Z N H C
+    // 0 0 0 C 4
+    fn rla(&mut self) -> u32 {
+        self.alu_rla(false)
+    }
+
+    fn alu_rla(&mut self, fill_carry: bool) -> u32 {
+        use self::Flags::*;
+        let a = self.regs.readb(self::RegsB::A);
+        self.regs.writeb(self::RegsB::A, a.rotate_left(1));
+        self.set_flag(Z, false);
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, ((a & 0x80) == 0 && fill_carry));
+        4
     }
 }
