@@ -23,6 +23,12 @@ pub enum Condition {
     C,
 }
 
+#[derive(PartialEq)]
+pub enum RotateDir {
+    L,
+    R,
+}
+
 impl Condition {
     // TODO: We don't want to take a reference to the whole CPU just to get to
     // the flags...
@@ -289,6 +295,7 @@ impl Cpu {
             0x0C => self.inc(C),
             0x0D => self.dec(C),
             0x0E => self.ld(C, self::IndirectAddr::ZeroPage),
+            0x0F => self.rrca(),
             0x11 => self.ldiw(DE),
             0x12 => self.ld(self::IndirectAddr::DE, A),
             0x13 => self.incw(DE),
@@ -303,6 +310,7 @@ impl Cpu {
             0x1C => self.inc(E),
             0x1D => self.dec(E),
             0x1E => self.ld(E, self::IndirectAddr::ZeroPage),
+            0x1F => self.rra(),
             0x20 => self.jr_cond(self::Condition::NZ),
             0x21 => self.ldiw(HL),
             0x22 => self.ld(self::IndirectAddr::HLP, A),
@@ -945,24 +953,48 @@ impl Cpu {
     // Z N H C
     // 0 0 0 C 4
     fn rlca(&mut self) -> u32 {
-        self.alu_rla(true)
+        self.alu_rxa(true, self::RotateDir::L)
     }
 
     // RLA
     // Z N H C
     // 0 0 0 C 4
     fn rla(&mut self) -> u32 {
-        self.alu_rla(false)
+        self.alu_rxa(false, self::RotateDir::L)
     }
 
-    fn alu_rla(&mut self, fill_carry: bool) -> u32 {
+    // RRCA
+    // Z N H C
+    // 0 0 0 C 4
+    fn rrca(&mut self) -> u32 {
+        self.alu_rxa(true, self::RotateDir::R)
+    }
+
+    // RRA
+    // Z N H C
+    // 0 0 0 C 4
+    fn rra(&mut self) -> u32 {
+        self.alu_rxa(false, self::RotateDir::R)
+    }
+
+    fn alu_rxa(&mut self, fill_carry: bool, dir: RotateDir) -> u32 {
         use self::Flags::*;
-        let a = self.regs.readb(self::RegsB::A);
-        self.regs.writeb(self::RegsB::A, a.rotate_left(1));
+        let a: u8;
+        let c: bool;
+
+        if dir == self::RotateDir::L {
+            a = self.regs.readb(self::RegsB::A).rotate_left(1);
+            c = (a & 0x80) != 0;
+        } else {
+            a = self.regs.readb(self::RegsB::A).rotate_right(1);
+            c = (a & 0x01) != 0;
+        }
+
+        self.regs.writeb(self::RegsB::A, a);
         self.set_flag(Z, false);
         self.set_flag(N, false);
         self.set_flag(H, false);
-        self.set_flag(C, ((a & 0x80) == 0 && fill_carry));
+        self.set_flag(C, c && fill_carry);
         4
     }
 }
