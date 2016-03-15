@@ -495,6 +495,7 @@ impl Cpu {
             0xD6 => self.sub(self::ImmediateB),
             0xD7 => self.rst(0x10),
             0xD8 => self.ret_cond(self::Condition::C),
+            0xD9 => self.reti(),
             0xDA => self.jp_cond(self::Condition::C),
             0xDC => self.call_cond(self::Condition::C),
             0xDE => self.sbc(self::ImmediateB),
@@ -921,15 +922,26 @@ impl Cpu {
         24
     }
 
-    // RET
-    // Z N H C
-    // - - - - 16
-    fn ret(&mut self) -> u32 {
+    fn do_ret(&mut self) -> u32 {
         let pc = self.popw();
         self.regs.writew(self::RegsW::PC, pc);
         16
     }
 
+    // RETI
+    // Z N H C
+    // - - - - 16
+    fn reti(&mut self) -> u32 {
+        self.ime = true;
+        self.do_ret()
+    }
+
+    // RET
+    // Z N H C
+    // - - - - 16
+    fn ret(&mut self) -> u32 {
+        self.do_ret()
+    }
 
     // RET cc
     // Z N H C
@@ -938,9 +950,7 @@ impl Cpu {
         if !cond.test(self) {
             return 8;
         }
-        let pc = self.popw();
-        self.regs.writew(self::RegsW::PC, pc);
-        20
+        self.do_ret() + 4
     }
 
     // RST t
