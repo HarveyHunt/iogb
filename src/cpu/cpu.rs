@@ -7,6 +7,7 @@ pub struct Cpu {
     clk: clk::Clock,
     regs: Registers,
     mmu: mmu::Mmu,
+    ime: bool,
 }
 
 pub enum Flags {
@@ -225,6 +226,7 @@ impl Cpu {
             clk: clk::Clock::default(),
             regs: Registers::default(),
             mmu: mmu::Mmu::new(cart),
+            ime: false,
         }
     }
 
@@ -508,10 +510,12 @@ impl Cpu {
             0xEF => self.rst(0x28),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
             0xF1 => self.pop(AF),
+            0xF3 => self.di(),
             0xF5 => self.push(AF),
             0xF6 => self.or(self::ImmediateB),
             0xF7 => self.rst(0x30),
             0xF9 => self.ldw(SP, HL),
+            0xFB => self.ei(),
             0xFE => self.cp(self::ImmediateB),
             0xFF => self.rst(0x38),
             inv => {
@@ -995,6 +999,22 @@ impl Cpu {
         self.set_flag(N, false);
         self.set_flag(H, false);
         self.set_flag(C, c && fill_carry);
+        4
+    }
+
+    // EI
+    // Z N H C
+    // - - - - 4
+    fn ei(&mut self) -> u32 {
+        self.ime = true;
+        4
+    }
+
+    // DI
+    // Z N H C
+    // - - - - 4
+    fn di(&mut self) -> u32 {
+        self.ime = false;
         4
     }
 }
