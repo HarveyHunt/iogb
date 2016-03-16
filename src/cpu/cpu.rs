@@ -616,6 +616,70 @@ impl Cpu {
             0x7D => self.bit(7, L),
             0x7E => self.bit(7, self::IndirectAddr::HL),
             0x7F => self.bit(7, A),
+            0x80 => self.res(0, B),
+            0x81 => self.res(0, C),
+            0x82 => self.res(0, D),
+            0x83 => self.res(0, E),
+            0x84 => self.res(0, H),
+            0x85 => self.res(0, L),
+            0x86 => self.res(0, self::IndirectAddr::HL),
+            0x87 => self.res(0, A),
+            0x88 => self.res(1, B),
+            0x89 => self.res(1, C),
+            0x8A => self.res(1, D),
+            0x8B => self.res(1, E),
+            0x8C => self.res(1, H),
+            0x8D => self.res(1, L),
+            0x8E => self.res(1, self::IndirectAddr::HL),
+            0x8F => self.res(1, A),
+            0x90 => self.res(2, B),
+            0x91 => self.res(2, C),
+            0x92 => self.res(2, D),
+            0x93 => self.res(2, E),
+            0x94 => self.res(2, H),
+            0x95 => self.res(2, L),
+            0x96 => self.res(2, self::IndirectAddr::HL),
+            0x97 => self.res(2, A),
+            0x98 => self.res(3, B),
+            0x99 => self.res(3, C),
+            0x9A => self.res(3, D),
+            0x9B => self.res(3, E),
+            0x9C => self.res(3, H),
+            0x9D => self.res(3, L),
+            0x9E => self.res(3, self::IndirectAddr::HL),
+            0x9F => self.res(3, A),
+            0xA0 => self.res(4, B),
+            0xA1 => self.res(4, C),
+            0xA2 => self.res(4, D),
+            0xA3 => self.res(4, E),
+            0xA4 => self.res(4, H),
+            0xA5 => self.res(4, L),
+            0xA6 => self.res(4, self::IndirectAddr::HL),
+            0xA7 => self.res(4, A),
+            0xA8 => self.res(5, B),
+            0xA9 => self.res(5, C),
+            0xAA => self.res(5, D),
+            0xAB => self.res(5, E),
+            0xAC => self.res(5, H),
+            0xAD => self.res(5, L),
+            0xAE => self.res(5, self::IndirectAddr::HL),
+            0xAF => self.res(5, A),
+            0xB0 => self.res(6, B),
+            0xB1 => self.res(6, C),
+            0xB2 => self.res(6, D),
+            0xB3 => self.res(6, E),
+            0xB4 => self.res(6, H),
+            0xB5 => self.res(6, L),
+            0xB6 => self.res(6, self::IndirectAddr::HL),
+            0xB7 => self.res(6, A),
+            0xB8 => self.res(7, B),
+            0xB9 => self.res(7, C),
+            0xBA => self.res(7, D),
+            0xBB => self.res(7, E),
+            0xBC => self.res(7, H),
+            0xBD => self.res(7, L),
+            0xBE => self.res(7, self::IndirectAddr::HL),
+            0xBF => self.res(7, A),
             0xC0 => self.set(0, B),
             0xC1 => self.set(0, C),
             0xC2 => self.set(0, D),
@@ -1194,6 +1258,16 @@ impl Cpu {
     fn set<A: ReadB + WriteB>(&mut self, bit: u8, addr: A) -> u32 {
         let val = addr.readb(self) | 1 << bit;
         addr.writeb(self, val | 1 << bit);
+        // TODO: Return correct value...
+        8
+    }
+
+    // RES b r | b (hl)
+    // Z N H C
+    // - - - - 8 | 16
+    fn res<A: ReadB + WriteB>(&mut self, bit: u8, addr: A) -> u32 {
+        let val = addr.readb(self) | 1 << bit;
+        addr.writeb(self, val & 0 << bit);
         // TODO: Return correct value...
         8
     }
