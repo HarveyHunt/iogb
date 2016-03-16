@@ -277,6 +277,55 @@ impl Cpu {
         self.regs.f & (flag as u8) > 0
     }
 
+    fn handle_interrupts(&mut self) {
+        // TODO: Constify this stuff
+        let iflag = self.mmu.readb(0xFF0F);
+        let ie = self.mmu.readb(0xFFFF);
+        let interrupt = iflag & ie;
+        let handler_addr: u16;
+
+        if interrupt == 0x0 {
+            return;
+        }
+
+        if (interrupt & (1 << 0)) == 1 << 0 {
+            // VBLANK
+            self.mmu.writeb(0xFF0F, iflag & !(1 << 0));
+            handler_addr = 0x0040;
+        } else if (interrupt & (1 << 1)) == 1 << 1 {
+            // LCDCSTAT
+            self.mmu.writeb(0xFF0F, iflag & !(1 << 1));
+            handler_addr = 0x0048;
+        } else if (interrupt & (1 << 2)) == 1 << 2 {
+            handler_addr = 0x0050;
+            // Timer
+            self.mmu.writeb(0xFF0F, iflag & !(1 << 2));
+        } else if (interrupt & (1 << 3)) == 1 << 3 {
+            // Serial
+            self.mmu.writeb(0xFF0F, iflag & !(1 << 3));
+            handler_addr = 0x0058;
+        } else if (interrupt & (1 << 4)) == 1 << 4 {
+            // Joypad
+            self.mmu.writeb(0xFF0F, iflag & !(1 << 4));
+            handler_addr = 0x0060;
+        } else {
+            panic!("Invalid interrupt! IE: {:x} IF {:x}", ie, iflag);
+        }
+
+        let pc = self.regs.readw(self::RegsW::PC);
+        self.pushw(pc);
+        self.regs.writew(self::RegsW::PC, handler_addr);
+        self.ime = false;
+    }
+
+    pub fn step(&mut self) -> u32 {
+        if self.ime {
+            self.handle_interrupts();
+        }
+
+        self.dexec()
+    }
+
     // Decode and execute, returning the number of ticks that execution took.
     pub fn dexec(&mut self) -> u32 {
         use self::RegsW::*;

@@ -13,8 +13,7 @@ impl GameBoy {
 
     pub fn run(&mut self) {
         loop {
-            // TODO: Interrupt handling needs adding...
-            self.cpu.dexec();
+            self.cpu.step();
         }
     }
 }
