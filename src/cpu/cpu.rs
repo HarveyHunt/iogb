@@ -1,5 +1,6 @@
 use mmu;
 use cartridge;
+use super::interrupt;
 use super::clk;
 
 #[derive(Debug)]
@@ -7,7 +8,7 @@ pub struct Cpu {
     clk: clk::Clock,
     regs: Registers,
     mmu: mmu::Mmu,
-    ime: bool,
+    ic: interrupt::InterruptController,
 }
 
 pub enum Flags {
@@ -226,7 +227,7 @@ impl Cpu {
             clk: clk::Clock::default(),
             regs: Registers::default(),
             mmu: mmu::Mmu::new(cart),
-            ime: false,
+            ic: interrupt::InterruptController::new(),
         }
     }
 
@@ -278,48 +279,21 @@ impl Cpu {
     }
 
     fn handle_interrupts(&mut self) {
-        // TODO: Constify this stuff
-        let iflag = self.mmu.readb(0xFF0F);
-        let ie = self.mmu.readb(0xFFFF);
-        let interrupt = iflag & ie;
-        let handler_addr: u16;
-
-        if interrupt == 0x0 {
-            return;
+        let int;
+        match self.ic.get_interrupt() {
+            None => return,
+            Some(i) => int = i,
         }
 
-        if (interrupt & (1 << 0)) == 1 << 0 {
-            // VBLANK
-            self.mmu.writeb(0xFF0F, iflag & !(1 << 0));
-            handler_addr = 0x0040;
-        } else if (interrupt & (1 << 1)) == 1 << 1 {
-            // LCDCSTAT
-            self.mmu.writeb(0xFF0F, iflag & !(1 << 1));
-            handler_addr = 0x0048;
-        } else if (interrupt & (1 << 2)) == 1 << 2 {
-            handler_addr = 0x0050;
-            // Timer
-            self.mmu.writeb(0xFF0F, iflag & !(1 << 2));
-        } else if (interrupt & (1 << 3)) == 1 << 3 {
-            // Serial
-            self.mmu.writeb(0xFF0F, iflag & !(1 << 3));
-            handler_addr = 0x0058;
-        } else if (interrupt & (1 << 4)) == 1 << 4 {
-            // Joypad
-            self.mmu.writeb(0xFF0F, iflag & !(1 << 4));
-            handler_addr = 0x0060;
-        } else {
-            panic!("Invalid interrupt! IE: {:x} IF {:x}", ie, iflag);
-        }
-
+        self.ic.reset_interrupt(int);
         let pc = self.regs.readw(self::RegsW::PC);
         self.pushw(pc);
-        self.regs.writew(self::RegsW::PC, handler_addr);
-        self.ime = false;
+        self.regs.writew(self::RegsW::PC, int.get_addr());
+        self.ic.ime = false;
     }
 
     pub fn step(&mut self) -> u32 {
-        if self.ime {
+        if self.ic.ime {
             self.handle_interrupts();
         }
 
@@ -981,7 +955,7 @@ impl Cpu {
     // Z N H C
     // - - - - 16
     fn reti(&mut self) -> u32 {
-        self.ime = true;
+        self.ic.ime = true;
         self.do_ret()
     }
 
@@ -1065,7 +1039,7 @@ impl Cpu {
     // Z N H C
     // - - - - 4
     fn ei(&mut self) -> u32 {
-        self.ime = true;
+        self.ic.ime = true;
         4
     }
 
@@ -1073,7 +1047,7 @@ impl Cpu {
     // Z N H C
     // - - - - 4
     fn di(&mut self) -> u32 {
-        self.ime = false;
+        self.ic.ime = false;
         4
     }
 }
