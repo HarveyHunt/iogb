@@ -552,6 +552,70 @@ impl Cpu {
         use self::RegsB::*;
         let op = self.fetchb();
         match op {
+            0x40 => self.bit(0, B),
+            0x41 => self.bit(0, C),
+            0x42 => self.bit(0, D),
+            0x43 => self.bit(0, E),
+            0x44 => self.bit(0, H),
+            0x45 => self.bit(0, L),
+            0x46 => self.bit(0, self::IndirectAddr::HL),
+            0x47 => self.bit(0, A),
+            0x48 => self.bit(1, B),
+            0x49 => self.bit(1, C),
+            0x4A => self.bit(1, D),
+            0x4B => self.bit(1, E),
+            0x4C => self.bit(1, H),
+            0x4D => self.bit(1, L),
+            0x4E => self.bit(1, self::IndirectAddr::HL),
+            0x4F => self.bit(1, A),
+            0x50 => self.bit(2, B),
+            0x51 => self.bit(2, C),
+            0x52 => self.bit(2, D),
+            0x53 => self.bit(2, E),
+            0x54 => self.bit(2, H),
+            0x55 => self.bit(2, L),
+            0x56 => self.bit(2, self::IndirectAddr::HL),
+            0x57 => self.bit(2, A),
+            0x58 => self.bit(3, B),
+            0x59 => self.bit(3, C),
+            0x5A => self.bit(3, D),
+            0x5B => self.bit(3, E),
+            0x5C => self.bit(3, H),
+            0x5D => self.bit(3, L),
+            0x5E => self.bit(3, self::IndirectAddr::HL),
+            0x5F => self.bit(3, A),
+            0x60 => self.bit(4, B),
+            0x61 => self.bit(4, C),
+            0x62 => self.bit(4, D),
+            0x63 => self.bit(4, E),
+            0x64 => self.bit(4, H),
+            0x65 => self.bit(4, L),
+            0x66 => self.bit(4, self::IndirectAddr::HL),
+            0x67 => self.bit(4, A),
+            0x68 => self.bit(5, B),
+            0x69 => self.bit(5, C),
+            0x6A => self.bit(5, D),
+            0x6B => self.bit(5, E),
+            0x6C => self.bit(5, H),
+            0x6D => self.bit(5, L),
+            0x6E => self.bit(5, self::IndirectAddr::HL),
+            0x6F => self.bit(5, A),
+            0x70 => self.bit(6, B),
+            0x71 => self.bit(6, C),
+            0x72 => self.bit(6, D),
+            0x73 => self.bit(6, E),
+            0x74 => self.bit(6, H),
+            0x75 => self.bit(6, L),
+            0x76 => self.bit(6, self::IndirectAddr::HL),
+            0x77 => self.bit(6, A),
+            0x78 => self.bit(7, B),
+            0x79 => self.bit(7, C),
+            0x7A => self.bit(7, D),
+            0x7B => self.bit(7, E),
+            0x7C => self.bit(7, H),
+            0x7D => self.bit(7, L),
+            0x7E => self.bit(7, self::IndirectAddr::HL),
+            0x7F => self.bit(7, A),
             inv => {
                 panic!("The CB instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
                        inv,
@@ -1045,5 +1109,18 @@ impl Cpu {
     fn di(&mut self) -> u32 {
         self.interconnect.ic.ime = false;
         4
+    }
+
+    // BIT b r | b (hl)
+    // Z N H C
+    // Z 0 1 - 8 | 16
+    fn bit<I: ReadB>(&mut self, b: u8, i: I) -> u32 {
+        use self::Flags::*;
+        let z = (i.readb(self) & (1 << b)) == 0;
+        self.set_flag(Z, z);
+        self.set_flag(N, false);
+        self.set_flag(H, true);
+        // TODO: Return correct value...
+        8
     }
 }
