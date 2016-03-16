@@ -616,6 +616,70 @@ impl Cpu {
             0x7D => self.bit(7, L),
             0x7E => self.bit(7, self::IndirectAddr::HL),
             0x7F => self.bit(7, A),
+            0xC0 => self.set(0, B),
+            0xC1 => self.set(0, C),
+            0xC2 => self.set(0, D),
+            0xC3 => self.set(0, E),
+            0xC4 => self.set(0, H),
+            0xC5 => self.set(0, L),
+            0xC6 => self.set(0, self::IndirectAddr::HL),
+            0xC7 => self.set(0, A),
+            0xC8 => self.set(1, B),
+            0xC9 => self.set(1, C),
+            0xCA => self.set(1, D),
+            0xCB => self.set(1, E),
+            0xCC => self.set(1, H),
+            0xCD => self.set(1, L),
+            0xCE => self.set(1, self::IndirectAddr::HL),
+            0xCF => self.set(1, A),
+            0xD0 => self.set(2, B),
+            0xD1 => self.set(2, C),
+            0xD2 => self.set(2, D),
+            0xD3 => self.set(2, E),
+            0xD4 => self.set(2, H),
+            0xD5 => self.set(2, L),
+            0xD6 => self.set(2, self::IndirectAddr::HL),
+            0xD7 => self.set(2, A),
+            0xD8 => self.set(3, B),
+            0xD9 => self.set(3, C),
+            0xDA => self.set(3, D),
+            0xDB => self.set(3, E),
+            0xDC => self.set(3, H),
+            0xDD => self.set(3, L),
+            0xDE => self.set(3, self::IndirectAddr::HL),
+            0xDF => self.set(3, A),
+            0xE0 => self.set(4, B),
+            0xE1 => self.set(4, C),
+            0xE2 => self.set(4, D),
+            0xE3 => self.set(4, E),
+            0xE4 => self.set(4, H),
+            0xE5 => self.set(4, L),
+            0xE6 => self.set(4, self::IndirectAddr::HL),
+            0xE7 => self.set(4, A),
+            0xE8 => self.set(5, B),
+            0xE9 => self.set(5, C),
+            0xEA => self.set(5, D),
+            0xEB => self.set(5, E),
+            0xEC => self.set(5, H),
+            0xED => self.set(5, L),
+            0xEE => self.set(5, self::IndirectAddr::HL),
+            0xEF => self.set(5, A),
+            0xF0 => self.set(6, B),
+            0xF1 => self.set(6, C),
+            0xF2 => self.set(6, D),
+            0xF3 => self.set(6, E),
+            0xF4 => self.set(6, H),
+            0xF5 => self.set(6, L),
+            0xF6 => self.set(6, self::IndirectAddr::HL),
+            0xF7 => self.set(6, A),
+            0xF8 => self.set(7, B),
+            0xF9 => self.set(7, C),
+            0xFA => self.set(7, D),
+            0xFB => self.set(7, E),
+            0xFC => self.set(7, H),
+            0xFD => self.set(7, L),
+            0xFE => self.set(7, self::IndirectAddr::HL),
+            0xFF => self.set(7, A),
             inv => {
                 panic!("The CB instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
                        inv,
@@ -1120,6 +1184,16 @@ impl Cpu {
         self.set_flag(Z, z);
         self.set_flag(N, false);
         self.set_flag(H, true);
+        // TODO: Return correct value...
+        8
+    }
+
+    // SET b r | b (hl)
+    // Z N H C
+    // - - - - 8 | 16
+    fn set<A: ReadB + WriteB>(&mut self, bit: u8, addr: A) -> u32 {
+        let val = addr.readb(self) | 1 << bit;
+        addr.writeb(self, val | 1 << bit);
         // TODO: Return correct value...
         8
     }
