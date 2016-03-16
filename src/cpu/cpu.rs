@@ -1,6 +1,4 @@
 use interconnect;
-use cartridge;
-use super::interrupt;
 use super::clk;
 
 #[derive(Debug)]
@@ -8,7 +6,6 @@ pub struct Cpu {
     clk: clk::Clock,
     regs: Registers,
     interconnect: interconnect::Interconnect,
-    ic: interrupt::InterruptController,
 }
 
 pub enum Flags {
@@ -226,7 +223,6 @@ impl Cpu {
         Cpu {
             clk: clk::Clock::default(),
             regs: Registers::default(),
-            ic: interrupt::InterruptController::new(),
             interconnect: interconnect,
         }
     }
@@ -280,20 +276,20 @@ impl Cpu {
 
     fn handle_interrupts(&mut self) {
         let int;
-        match self.ic.get_interrupt() {
+        match self.interconnect.ic.get_interrupt() {
             None => return,
             Some(i) => int = i,
         }
 
-        self.ic.reset_interrupt(int);
+        self.interconnect.ic.reset_interrupt(int);
         let pc = self.regs.readw(self::RegsW::PC);
         self.pushw(pc);
         self.regs.writew(self::RegsW::PC, int.get_addr());
-        self.ic.ime = false;
+        self.interconnect.ic.ime = false;
     }
 
     pub fn step(&mut self) -> u32 {
-        if self.ic.ime {
+        if self.interconnect.ic.ime {
             self.handle_interrupts();
         }
 
@@ -955,7 +951,7 @@ impl Cpu {
     // Z N H C
     // - - - - 16
     fn reti(&mut self) -> u32 {
-        self.ic.ime = true;
+        self.interconnect.ic.ime = true;
         self.do_ret()
     }
 
@@ -1039,7 +1035,7 @@ impl Cpu {
     // Z N H C
     // - - - - 4
     fn ei(&mut self) -> u32 {
-        self.ic.ime = true;
+        self.interconnect.ic.ime = true;
         4
     }
 
@@ -1047,7 +1043,7 @@ impl Cpu {
     // Z N H C
     // - - - - 4
     fn di(&mut self) -> u32 {
-        self.ic.ime = false;
+        self.interconnect.ic.ime = false;
         4
     }
 }

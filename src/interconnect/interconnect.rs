@@ -1,6 +1,7 @@
 use std::fmt;
 
 use super::brom::{BROM_SZ, BOOTROM};
+use interrupt;
 use cartridge;
 
 const WRAM_SZ: usize = 0x8000;
@@ -12,6 +13,8 @@ pub struct Interconnect {
     zram: [u8; ZRAM_SZ], // 0xFF80 -> 0xFFFF
     cart: cartridge::Cartridge,
     boot_mode: bool, // Map brom into bottom of memory?
+    // TODO: Make this private and implement wrapper functions
+    pub ic: interrupt::InterruptController,
 }
 
 impl Interconnect {
@@ -22,6 +25,7 @@ impl Interconnect {
             zram: [0; ZRAM_SZ],
             cart: cart,
             boot_mode: true,
+            ic: interrupt::InterruptController::new(),
         }
     }
 
