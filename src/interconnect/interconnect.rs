@@ -45,9 +45,11 @@ impl Interconnect {
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF],
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF],
             0xFE00...0xFE9F => 0, // OAM
-            0xFF00...0xFF7F => 0, //MMIO
+            0xFF00...0xFF0E => 0, //MMIO
+            0xFF0F => self.ic.iflag,
+            0xFF10...0xFF7F => 0, //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F],
-            0xFFFF => 0, //FIXME: Need a way of accessing the CPU's IC...
+            0xFFFF => self.ic.ie, 
             _ => panic!("Can't read 0x{:x}", addr),
         }
     }
@@ -61,9 +63,11 @@ impl Interconnect {
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF] = val,
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF] = val,
             0xFE00...0xFE9F => {} // OAM
-            0xFF00...0xFF7F => {} //MMIO
+            0xFF00...0xFF0E => {} //MMIO
+            0xFF0F => self.ic.iflag = val,
+            0xFF10...0xFF7F => {} //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F] = val,
-            0xFFFF => {} //FIXME: Need a way of accessing the CPU's IC...
+            0xFFFF => self.ic.ie = val,
             _ => panic!("Can't write to 0x{:x}", addr),
         }
     }

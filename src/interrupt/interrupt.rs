@@ -24,8 +24,8 @@ impl Interrupt {
 
 pub struct InterruptController {
     pub ime: bool,
-    iflag: u8,
-    ie: u8,
+    pub iflag: u8,
+    pub ie: u8,
 }
 
 impl fmt::Debug for InterruptController {
