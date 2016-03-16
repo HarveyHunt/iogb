@@ -6,7 +6,7 @@ use argparse::{ArgumentParser, Parse, Print};
 
 mod gb;
 mod cpu;
-mod mmu;
+mod interconnect;
 mod cartridge;
 
 fn main() {

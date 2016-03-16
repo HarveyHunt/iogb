@@ -1,4 +1,4 @@
-use mmu;
+use interconnect;
 use cartridge;
 use super::interrupt;
 use super::clk;
@@ -7,7 +7,7 @@ use super::clk;
 pub struct Cpu {
     clk: clk::Clock,
     regs: Registers,
-    mmu: mmu::Mmu,
+    interconnect: interconnect::Interconnect,
     ic: interrupt::InterruptController,
 }
 
@@ -116,7 +116,7 @@ trait ReadW {
 impl ReadB for IndirectAddr {
     fn readb(&self, cpu: &mut Cpu) -> u8 {
         let addr = cpu.iaddr(*self);
-        cpu.mmu.readb(addr)
+        cpu.interconnect.readb(addr)
     }
 }
 
@@ -135,7 +135,7 @@ impl ReadB for ImmediateB {
 impl WriteB for IndirectAddr {
     fn writeb(&self, cpu: &mut Cpu, val: u8) {
         let addr = cpu.iaddr(*self);
-        cpu.mmu.writeb(addr, val);
+        cpu.interconnect.writeb(addr, val);
     }
 }
 
@@ -222,12 +222,12 @@ impl Registers {
 }
 
 impl Cpu {
-    pub fn new(cart: cartridge::Cartridge) -> Cpu {
+    pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
         Cpu {
             clk: clk::Clock::default(),
             regs: Registers::default(),
-            mmu: mmu::Mmu::new(cart),
             ic: interrupt::InterruptController::new(),
+            interconnect: interconnect,
         }
     }
 
@@ -254,13 +254,13 @@ impl Cpu {
     }
 
     pub fn fetchb(&mut self) -> u8 {
-        let val = self.mmu.readb(self.regs.pc);
+        let val = self.interconnect.readb(self.regs.pc);
         self.regs.pc += 1;
         val
     }
 
     pub fn fetchw(&mut self) -> u16 {
-        let val = self.mmu.readw(self.regs.pc);
+        let val = self.interconnect.readw(self.regs.pc);
         self.regs.pc += 2;
         val
     }
@@ -892,9 +892,9 @@ impl Cpu {
 
     fn pushw(&mut self, val: u16) {
         let mut sp = self.regs.readw(self::RegsW::SP).wrapping_sub(1);
-        self.mmu.writeb(sp, (val >> 8) as u8);
+        self.interconnect.writeb(sp, (val >> 8) as u8);
         sp = sp.wrapping_sub(1);
-        self.mmu.writeb(sp, val as u8);
+        self.interconnect.writeb(sp, val as u8);
         self.regs.writew(self::RegsW::SP, sp);
     }
 
@@ -910,9 +910,9 @@ impl Cpu {
 
     fn popw(&mut self) -> u16 {
         let mut sp = self.regs.readw(self::RegsW::SP);
-        let mut val = self.mmu.readb(sp) as u16;
+        let mut val = self.interconnect.readb(sp) as u16;
         sp = sp.wrapping_add(1);
-        val |= (self.mmu.readb(sp) as u16) << 8;
+        val |= (self.interconnect.readb(sp) as u16) << 8;
         self.regs.writew(self::RegsW::SP, sp.wrapping_add(1));
         val
     }

@@ -6,7 +6,7 @@ use cartridge;
 const WRAM_SZ: usize = 0x8000;
 const ZRAM_SZ: usize = 0x7F;
 
-pub struct Mmu {
+pub struct Interconnect {
     brom: [u8; BROM_SZ], // 0x0000 -> 0x00FF
     wram: [u8; WRAM_SZ], // 0xC000 -> 0xDFFF, shadowed @ 0xE000 -> 0xFDFF
     zram: [u8; ZRAM_SZ], // 0xFF80 -> 0xFFFF
@@ -14,14 +14,12 @@ pub struct Mmu {
     boot_mode: bool, // Map brom into bottom of memory?
 }
 
-impl Mmu {
-    pub fn new(cart: cartridge::Cartridge) -> Mmu {
-        Mmu {
+impl Interconnect {
+    pub fn new(cart: cartridge::Cartridge) -> Interconnect {
+        Interconnect {
             brom: BOOTROM,
             wram: [0; WRAM_SZ],
             zram: [0; ZRAM_SZ],
-            // TODO: It feels weird having a cartidge embedded in the MMU....
-            // Perhaps this address handling should be moved into gb.rs?
             cart: cart,
             boot_mode: true,
         }
@@ -76,8 +74,8 @@ impl Mmu {
     }
 }
 
-impl fmt::Debug for Mmu {
+impl fmt::Debug for Interconnect {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "mmu: boot_mode: {}", self.boot_mode)
+        writeln!(f, "interconnect: boot_mode: {}", self.boot_mode)
     }
 }

@@ -1,5 +1,6 @@
 use cpu;
 use cartridge;
+use interconnect;
 
 #[derive(Debug)]
 pub struct GameBoy {
@@ -8,7 +9,8 @@ pub struct GameBoy {
 
 impl GameBoy {
     pub fn new(cart: cartridge::Cartridge) -> GameBoy {
-        GameBoy { cpu: cpu::Cpu::new(cart) }
+        let ic = interconnect::Interconnect::new(cart);
+        GameBoy { cpu: cpu::Cpu::new(ic) }
     }
 
     pub fn run(&mut self) {
