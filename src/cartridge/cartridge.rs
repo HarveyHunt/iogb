@@ -1,3 +1,4 @@
+use std::fmt;
 use std::iter;
 use std::path;
 use std::fs::File;
@@ -7,8 +8,18 @@ const ROM_BANK_SZ: usize = 0x4000;
 const RAM_BANK_SZ: usize = 0x2000;
 
 // TODO: Add all of the MBCs to here.
+#[derive(Debug)]
 enum Mbc {
     None,
+}
+
+impl fmt::Display for Mbc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mbc = match *self {
+            self::Mbc::None => "None",
+        };
+        writeln!(f, "{}", mbc)
+    }
 }
 
 pub struct Cartridge {
@@ -77,4 +88,15 @@ impl Cartridge {
 
     pub fn write_rom(&self, addr: u16, val: u8) {}
     pub fn write_ram(&self, addr: u16, val: u8) {}
+}
+
+impl fmt::Debug for Cartridge {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f,
+                 "mbc: {}, ram_enable: {}, ram_bank: {}, rom_bank: {},",
+                 self.mbc,
+                 self.ram_enable,
+                 self.ram_bank,
+                 self.rom_bank)
+    }
 }

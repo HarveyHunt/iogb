@@ -84,6 +84,6 @@ impl Interconnect {
 
 impl fmt::Debug for Interconnect {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "interconnect: boot_mode: {}", self.boot_mode)
+        writeln!(f, "boot_mode: {}, cart: {:?}", self.boot_mode, self.cart)
     }
 }
