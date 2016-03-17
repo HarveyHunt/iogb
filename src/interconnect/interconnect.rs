@@ -72,8 +72,8 @@ impl Interconnect {
         }
     }
 
-    pub fn readw(&mut self, addr: u16) -> u16 {
-        (self.readb(addr) as u16) | ((self.readb(addr + 1) as u16) << 8)
+    pub fn readw(&self, addr: u16) -> u16 {
+        ((self.readb(addr + 1) as u16) << 8 | (self.readb(addr) as u16))
     }
 
     pub fn writew(&mut self, addr: u16, val: u16) {
