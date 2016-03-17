@@ -227,6 +227,20 @@ impl Cpu {
         }
     }
 
+    fn crash(&self, cause: String) -> ! {
+        let mut code: String = "Code:".to_owned();
+        for pc in (self.regs.pc - 4)..(self.regs.pc + 4) {
+            if pc == self.regs.pc {
+                code.push_str(&format!(" [0x{:02x}]", self.interconnect.readb(pc)));
+            } else {
+                code.push_str(&format!(" 0x{:02x}", self.interconnect.readb(pc)));
+            }
+        }
+        println!("{}", code);
+        println!("{:?}", self);
+        panic!("{}", cause);
+    }
+
     pub fn iaddr(&mut self, ia: IndirectAddr) -> u16 {
         use self::IndirectAddr::*;
         match ia {
@@ -539,10 +553,9 @@ impl Cpu {
             0xFE => self.cp(self::ImmediateB),
             0xFF => self.rst(0x38),
             inv => {
-                panic!("The instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
-                       inv,
-                       self.regs.pc,
-                       self)
+                self.crash(format!("The instruction 0x{:x}@0x{:x} isn't implemented",
+                                   inv,
+                                   self.regs.pc));
             }
         }
     }
@@ -745,10 +758,9 @@ impl Cpu {
             0xFE => self.set(7, self::IndirectAddr::HL),
             0xFF => self.set(7, A),
             inv => {
-                panic!("The CB instruction 0x{:x}@0x{:x} isn't implemented\n{:?}",
-                       inv,
-                       self.regs.pc,
-                       self)
+                self.crash(format!("The instruction 0x{:x}@0x{:x} isn't implemented",
+                                   inv,
+                                   self.regs.pc));
             }
         }
     }
