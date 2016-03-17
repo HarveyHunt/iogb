@@ -227,17 +227,34 @@ impl Cpu {
         }
     }
 
+    fn print_stacktrace(&self) {
+        let mut sp = self.regs.sp;
+        let mut trace = "Stack:\n".to_owned();
+        while sp > 0xFF80 {
+            trace.push_str(&format!("0x{:04x}\n", self.interconnect.readw(sp)));
+            sp -= 2;
+        }
+        println!("{}", trace);
+    }
+
     fn crash(&self, cause: String) -> ! {
+        println!("{:?}", self.regs);
+
         let mut code: String = "Code:".to_owned();
-        for pc in (self.regs.pc - 4)..(self.regs.pc + 4) {
-            if pc == self.regs.pc {
+        for pc in (self.regs.pc - 5)..(self.regs.pc + 4) {
+            if (pc + 1) == self.regs.pc {
                 code.push_str(&format!(" [0x{:02x}]", self.interconnect.readb(pc)));
             } else {
                 code.push_str(&format!(" 0x{:02x}", self.interconnect.readb(pc)));
             }
         }
         println!("{}", code);
-        println!("{:?}", self);
+
+        if self.regs.sp < 0xFFFE {
+            self.print_stacktrace();
+        }
+
+        println!("{:#?}", self);
         panic!("{}", cause);
     }
 
