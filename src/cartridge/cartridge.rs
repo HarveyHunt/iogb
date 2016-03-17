@@ -13,15 +13,6 @@ enum Mbc {
     None,
 }
 
-impl fmt::Display for Mbc {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mbc = match *self {
-            self::Mbc::None => "None",
-        };
-        writeln!(f, "{}", mbc)
-    }
-}
-
 pub struct Cartridge {
     mbc: Mbc,
     rom: Vec<u8>,
@@ -92,11 +83,11 @@ impl Cartridge {
 
 impl fmt::Debug for Cartridge {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f,
-                 "mbc: {}, ram_enable: {}, ram_bank: {}, rom_bank: {},",
-                 self.mbc,
-                 self.ram_enable,
-                 self.ram_bank,
-                 self.rom_bank)
+        f.debug_struct("Cartridge")
+         .field("mbc", &self.mbc)
+         .field("ram_enable", &self.ram_enable)
+         .field("ram_bank", &self.ram_bank)
+         .field("rom_bank", &self.rom_bank)
+         .finish()
     }
 }

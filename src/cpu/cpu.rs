@@ -775,7 +775,7 @@ impl Cpu {
             0xFE => self.set(7, self::IndirectAddr::HL),
             0xFF => self.set(7, A),
             inv => {
-                self.crash(format!("The instruction 0x{:x}@0x{:x} isn't implemented",
+                self.crash(format!("The CB instruction 0x{:x}@0x{:x} isn't implemented",
                                    inv,
                                    self.regs.pc));
             }
