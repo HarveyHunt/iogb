@@ -12,6 +12,18 @@ const RAM_BANK_SZ: usize = 0x2000;
 #[derive(Debug)]
 enum Mbc {
     None,
+    One,
+}
+
+impl Mbc {
+    // TODO: Return an Option, so we can have nice error handling...
+    fn from_header(byte: u8) -> Mbc {
+        match byte {
+            0x00 => Mbc::None,
+            0x01 | 0x02 | 0x03  => Mbc::One,
+            inv => panic!("Unknown MBC type: 0x{:02x}", inv),
+        }
+    }
 }
 
 pub struct Cartridge {
@@ -28,12 +40,7 @@ impl Cartridge {
     pub fn new(rom_name: path::PathBuf) -> Cartridge {
         // TODO: Pass this error further up.
         let buf = Cartridge::open_rom(rom_name).unwrap();
-        // TODO: Maybe pull this buffer parsing into another function?
-        let mbc = match buf[0x147] {
-            0x00 => Mbc::None,
-            inv => panic!("Unknown MBC type: 0x{:x}", inv),
-        };
-
+        let mbc = Mbc::from_header(buf[0x147]);
         let ram_sz = match buf[0x149] {
             0x00 => 0,
             inv => panic!("Unknown ram size: 0x{:x}", inv),
