@@ -1,4 +1,5 @@
 use std::fmt;
+use std::str;
 use std::iter;
 use std::path;
 use std::fs::File;
@@ -14,6 +15,7 @@ enum Mbc {
 }
 
 pub struct Cartridge {
+    title: String,
     mbc: Mbc,
     rom: Vec<u8>,
     rom_bank: u8,
@@ -37,7 +39,15 @@ impl Cartridge {
             inv => panic!("Unknown ram size: 0x{:x}", inv),
         };
 
+        let title_buf = buf[0x134..0x143].to_vec();
+
+        let title = match str::from_utf8(&title_buf) {
+            Ok(v) => v,
+            Err(e) => panic!("Invalid utf8 {}", e),
+        };
+
         Cartridge {
+            title: title.trim_right_matches('\0').to_string(),
             mbc: mbc,
             rom: buf,
             rom_bank: 1,
@@ -84,6 +94,7 @@ impl Cartridge {
 impl fmt::Debug for Cartridge {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Cartridge")
+         .field("title", &self.title)
          .field("mbc", &self.mbc)
          .field("ram_enable", &self.ram_enable)
          .field("ram_bank", &self.ram_bank)
