@@ -586,6 +586,38 @@ impl Cpu {
         use self::RegsB::*;
         let op = self.fetchb();
         match op {
+            0x00 => self.rlc(B),
+            0x01 => self.rlc(C),
+            0x02 => self.rlc(D),
+            0x03 => self.rlc(E),
+            0x04 => self.rlc(H),
+            0x05 => self.rlc(L),
+            0x06 => self.rlc(self::IndirectAddr::HL),
+            0x07 => self.rlc(A),
+            0x08 => self.rrc(B),
+            0x09 => self.rrc(C),
+            0x0A => self.rrc(D),
+            0x0B => self.rrc(E),
+            0x0C => self.rrc(H),
+            0x0D => self.rrc(L),
+            0x0E => self.rrc(self::IndirectAddr::HL),
+            0x0F => self.rrc(A),
+            0x18 => self.rr(B),
+            0x19 => self.rr(C),
+            0x1A => self.rr(D),
+            0x1B => self.rr(E),
+            0x1C => self.rr(H),
+            0x1D => self.rr(L),
+            0x1E => self.rr(self::IndirectAddr::HL),
+            0x1F => self.rr(A),
+            0x10 => self.rl(B),
+            0x11 => self.rl(C),
+            0x12 => self.rl(D),
+            0x13 => self.rl(E),
+            0x14 => self.rl(H),
+            0x15 => self.rl(L),
+            0x16 => self.rl(self::IndirectAddr::HL),
+            0x17 => self.rl(A),
             0x40 => self.bit(0, B),
             0x41 => self.bit(0, C),
             0x42 => self.bit(0, D),
@@ -1211,49 +1243,96 @@ impl Cpu {
     // Z N H C
     // 0 0 0 C 4
     fn rlca(&mut self) -> u32 {
-        self.alu_rxa(true, self::RotateDir::L)
+        let mut a = self.regs.readb(self::RegsB::A);
+        a = self.alu_rxx(self::RotateDir::L, false, false, a);
+        self.regs.writeb(self::RegsB::A, a);
+        4
     }
 
     // RLA
     // Z N H C
     // 0 0 0 C 4
     fn rla(&mut self) -> u32 {
-        self.alu_rxa(false, self::RotateDir::L)
+        let mut a = self.regs.readb(self::RegsB::A);
+        a = self.alu_rxx(self::RotateDir::L, true, false, a);
+        self.regs.writeb(self::RegsB::A, a);
+        4
     }
 
     // RRCA
     // Z N H C
     // 0 0 0 C 4
     fn rrca(&mut self) -> u32 {
-        self.alu_rxa(true, self::RotateDir::R)
+        let mut a = self.regs.readb(self::RegsB::A);
+        a = self.alu_rxx(self::RotateDir::R, false, false, a);
+        self.regs.writeb(self::RegsB::A, a);
+        4
     }
 
     // RRA
     // Z N H C
     // 0 0 0 C 4
     fn rra(&mut self) -> u32 {
-        self.alu_rxa(false, self::RotateDir::R)
+        let mut a = self.regs.readb(self::RegsB::A);
+        a = self.alu_rxx(self::RotateDir::R, true, false, a);
+        self.regs.writeb(self::RegsB::A, a);
+        4
     }
 
-    fn alu_rxa(&mut self, fill_carry: bool, dir: RotateDir) -> u32 {
+    fn rl<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_rxx(self::RotateDir::L, true, true, v);
+        addr.writeb(self, v);
+        8
+    }
+
+    fn rlc<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_rxx(self::RotateDir::L, false, true, v);
+        addr.writeb(self, v);
+        8
+    }
+
+    fn rr<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_rxx(self::RotateDir::R, true, true, v);
+        addr.writeb(self, v);
+        8
+    }
+
+    fn rrc<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_rxx(self::RotateDir::R, false, true, v);
+        addr.writeb(self, v);
+        8
+    }
+
+    fn alu_rxx(&mut self, dir: RotateDir, include_carry: bool, set_z: bool, val: u8) -> u8 {
         use self::Flags::*;
-        let a: u8;
-        let c: bool;
+        let cout: bool;
+        let out: u8;
 
         if dir == self::RotateDir::L {
-            a = self.regs.readb(self::RegsB::A).rotate_left(1);
-            c = (a & 0x80) != 0;
+            cout = (val & 0x80) != 0;
+            if include_carry {
+                out = val << 1 | self.check_flag(C) as u8;
+            } else {
+                out = val.rotate_left(1);
+            }
         } else {
-            a = self.regs.readb(self::RegsB::A).rotate_right(1);
-            c = (a & 0x01) != 0;
+            cout = (val & 0x01) != 0;
+            if include_carry {
+                out = val >> 1 | (self.check_flag(C) as u8) << 7;
+            } else {
+                out = val.rotate_right(1);
+            }
         }
 
-        self.regs.writeb(self::RegsB::A, a);
-        self.set_flag(Z, false);
+        self.set_flag(Z, out == 0 && set_z);
         self.set_flag(N, false);
         self.set_flag(H, false);
-        self.set_flag(C, c && fill_carry);
-        4
+        self.set_flag(C, cout);
+        out
     }
 
     // EI
