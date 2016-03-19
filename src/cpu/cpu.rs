@@ -602,14 +602,6 @@ impl Cpu {
             0x0D => self.rrc(L),
             0x0E => self.rrc(self::IndirectAddr::HL),
             0x0F => self.rrc(A),
-            0x18 => self.rr(B),
-            0x19 => self.rr(C),
-            0x1A => self.rr(D),
-            0x1B => self.rr(E),
-            0x1C => self.rr(H),
-            0x1D => self.rr(L),
-            0x1E => self.rr(self::IndirectAddr::HL),
-            0x1F => self.rr(A),
             0x10 => self.rl(B),
             0x11 => self.rl(C),
             0x12 => self.rl(D),
@@ -618,6 +610,22 @@ impl Cpu {
             0x15 => self.rl(L),
             0x16 => self.rl(self::IndirectAddr::HL),
             0x17 => self.rl(A),
+            0x18 => self.rr(B),
+            0x19 => self.rr(C),
+            0x1A => self.rr(D),
+            0x1B => self.rr(E),
+            0x1C => self.rr(H),
+            0x1D => self.rr(L),
+            0x1E => self.rr(self::IndirectAddr::HL),
+            0x1F => self.rr(A),
+            0x30 => self.swap(B),
+            0x31 => self.swap(C),
+            0x32 => self.swap(D),
+            0x33 => self.swap(E),
+            0x34 => self.swap(H),
+            0x35 => self.swap(L),
+            0x36 => self.swap(self::IndirectAddr::HL),
+            0x37 => self.swap(A),
             0x40 => self.bit(0, B),
             0x41 => self.bit(0, C),
             0x42 => self.bit(0, D),
@@ -1380,6 +1388,21 @@ impl Cpu {
     fn res<A: ReadB + WriteB>(&mut self, bit: u8, addr: A) -> u32 {
         let val = addr.readb(self) | 1 << bit;
         addr.writeb(self, val & 0 << bit);
+        // TODO: Return correct value...
+        8
+    }
+
+    // SWAP r | (hl)
+    // Z N H C
+    // Z - - - 8 | 16
+    fn swap<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        use self::Flags::*;
+        let v = addr.readb(self);
+        let out = (v >> 4) | (v << 4);
+        self.set_flag(Z, out == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, false);
         // TODO: Return correct value...
         8
     }
