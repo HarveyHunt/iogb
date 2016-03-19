@@ -81,6 +81,7 @@ pub enum IndirectAddr {
     HLM, // HL-
     ZeroPage,
     ZeroPageC,
+    AddressW,
 }
 
 #[derive(Debug, Default)]
@@ -280,6 +281,7 @@ impl Cpu {
             }
             ZeroPage => 0xFF00 + self.fetchb() as u16,
             ZeroPageC => 0xFF00 + self.regs.readb(self::RegsB::C) as u16,
+            AddressW => self.fetchw(),
         }
     }
 
@@ -561,6 +563,7 @@ impl Cpu {
             0xE7 => self.rst(0x20),
             0xE8 => self.addw_sp(),
             0xE9 => self.jp(HL),
+            0xEA => self.ld(self::IndirectAddr::AddressW, A),
             0xEE => self.xor(self::ImmediateB),
             0xEF => self.rst(0x28),
             0xF0 => self.ld(A, self::IndirectAddr::ZeroPage), // LDH
@@ -571,6 +574,7 @@ impl Cpu {
             0xF6 => self.or(self::ImmediateB),
             0xF7 => self.rst(0x30),
             0xF9 => self.ldw(SP, HL),
+            0xFA => self.ld(A, self::IndirectAddr::AddressW),
             0xFB => self.ei(),
             0xFE => self.cp(self::ImmediateB),
             0xFF => self.rst(0x38),
