@@ -43,6 +43,7 @@ impl Condition {
 }
 
 pub struct ImmediateB;
+pub struct ImmediateW;
 pub struct AddressW;
 
 #[derive(Debug, Copy, Clone)]
@@ -336,7 +337,7 @@ impl Cpu {
         let op = self.fetchb();
         match op {
             0x00 => self.nop(),
-            0x01 => self.ldiw(BC),
+            0x01 => self.ldw(BC, self::AddressW),
             0x02 => self.ld(self::IndirectAddr::BC, A),
             0x03 => self.incw(BC),
             0x04 => self.inc(B),
@@ -350,7 +351,7 @@ impl Cpu {
             0x0D => self.dec(C),
             0x0E => self.ld(C, self::IndirectAddr::ZeroPage),
             0x0F => self.rrca(),
-            0x11 => self.ldiw(DE),
+            0x11 => self.ldw(DE, self::AddressW),
             0x12 => self.ld(self::IndirectAddr::DE, A),
             0x13 => self.incw(DE),
             0x14 => self.inc(D),
@@ -366,7 +367,7 @@ impl Cpu {
             0x1E => self.ld(E, self::IndirectAddr::ZeroPage),
             0x1F => self.rra(),
             0x20 => self.jr_cond(self::Condition::NZ),
-            0x21 => self.ldiw(HL),
+            0x21 => self.ldw(HL, self::AddressW),
             0x22 => self.ld(self::IndirectAddr::HLP, A),
             0x23 => self.incw(HL),
             0x24 => self.inc(H),
@@ -381,7 +382,7 @@ impl Cpu {
             0x2E => self.ld(L, self::IndirectAddr::ZeroPage),
             0x2F => self.cpl(),
             0x30 => self.jr_cond(self::Condition::NC),
-            0x31 => self.ldiw(SP),
+            0x31 => self.ldw(SP, self::AddressW),
             0x32 => self.ld(self::IndirectAddr::HLM, A),
             0x33 => self.incw(SP),
             0x34 => self.inc(self::IndirectAddr::HL),
@@ -883,22 +884,13 @@ impl Cpu {
         4
     }
 
-    // LD dd nn
+    // LD dd nn | dd d16
     // Z N H C
-    // - - - - : 8
-    fn ldw(&mut self, dd: RegsW, nn: RegsW) -> u32 {
-        let v = self.regs.readw(nn);
+    // - - - - : 8 | 12
+    fn ldw<I: ReadW>(&mut self, dd: RegsW, i: I) -> u32 {
+        let v = i.readw(self);
         self.regs.writew(dd, v);
         8
-    }
-
-    // LD dd d16
-    // Z N H C
-    // - - - - : 12
-    fn ldiw(&mut self, dd: RegsW) -> u32 {
-        let v = self.fetchw();
-        self.regs.writew(dd, v);
-        12
     }
 
     // ADD HL ss
