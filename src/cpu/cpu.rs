@@ -8,6 +8,7 @@ pub struct Cpu {
     interconnect: interconnect::Interconnect,
 }
 
+#[derive(Debug)]
 pub enum Flags {
     C = 0x10,
     H = 0x20,
@@ -173,6 +174,9 @@ impl Registers {
 
     pub fn writeb(&mut self, reg: RegsB, val: u8) {
         use self::RegsB::*;
+        if cfg!(debug_assertions) {
+            print!("\t {:?}=0x{:02x}", reg, val);
+        }
         match reg {
             A => self.a = val,
             B => self.b = val,
@@ -198,6 +202,9 @@ impl Registers {
 
     pub fn writew(&mut self, reg: RegsW, val: u16) {
         use self::RegsW::*;
+        if cfg!(debug_assertions) {
+            print!("\t{:?}=0x{:04x}", reg, val);
+        }
         match reg {
             PC => self.pc = val,
             SP => self.sp = val,
@@ -329,7 +336,12 @@ impl Cpu {
             self.handle_interrupts();
         }
 
-        self.dexec()
+        let ticks = self.dexec();
+        if cfg!(debug_assertions) {
+            print!("\t F={:04b}", self.regs.f >> 4);
+        }
+
+        ticks
     }
 
     // Decode and execute, returning the number of ticks that execution took.
@@ -337,6 +349,9 @@ impl Cpu {
         use self::RegsW::*;
         use self::RegsB::*;
         let op = self.fetchb();
+        if cfg!(debug_assertions) {
+            print!("\n0x{:02x}@0x{:04x}:", op, self.regs.pc - 1);
+        }
         match op {
             0x00 => self.nop(),
             0x01 => self.ldw(BC, self::AddressW),
@@ -590,6 +605,9 @@ impl Cpu {
         use self::RegsW::*;
         use self::RegsB::*;
         let op = self.fetchb();
+        if cfg!(debug_assertions) {
+            print!("\n0x{:02x}@0x{:04x}?", op, self.regs.pc - 1);
+        }
         match op {
             0x00 => self.rlc(B),
             0x01 => self.rlc(C),

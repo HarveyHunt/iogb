@@ -70,6 +70,9 @@ impl Interconnect {
             0xFFFF => self.ic.ie = val,
             _ => panic!("Can't write to 0x{:x}", addr),
         }
+        if cfg!(debug_assertions) {
+            print!("\t0x{:04x}=0x{:02x}", addr, val);
+        }
     }
 
     pub fn readw(&self, addr: u16) -> u16 {
