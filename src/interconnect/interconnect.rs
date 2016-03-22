@@ -65,7 +65,9 @@ impl Interconnect {
             0xFE00...0xFE9F => {} // OAM
             0xFF00...0xFF0E => {} //MMIO
             0xFF0F => self.ic.iflag = val,
-            0xFF10...0xFF7F => {} //MMIO
+            0xFF10...0xFF4F => {} //MMIO
+            0xFF50 => self.boot_mode = !(val == 1),
+            0xFF51...0xFF7F => {} //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F] = val,
             0xFFFF => self.ic.ie = val,
             _ => panic!("Can't write 0x{:02x} to 0x{:04x}", val, addr),
