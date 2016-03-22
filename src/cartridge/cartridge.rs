@@ -43,7 +43,7 @@ impl Cartridge {
         let mbc = Mbc::from_header(buf[0x147]);
         let ram_sz = match buf[0x149] {
             0x00 => 0,
-            inv => panic!("Unknown ram size: 0x{:x}", inv),
+            inv => panic!("Unknown ram size: 0x{:02x}", inv),
         };
 
         let title_buf = buf[0x134..0x143].to_vec();

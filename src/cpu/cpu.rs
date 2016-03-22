@@ -594,7 +594,7 @@ impl Cpu {
             0xFE => self.cp(self::ImmediateB),
             0xFF => self.rst(0x38),
             inv => {
-                self.crash(format!("The instruction 0x{:x}@0x{:x} isn't implemented",
+                self.crash(format!("The instruction 0x{:02x}@0x{:04x} isn't implemented",
                                    inv,
                                    self.regs.pc));
             }
@@ -842,7 +842,7 @@ impl Cpu {
             0xFE => self.set(7, self::IndirectAddr::HL),
             0xFF => self.set(7, A),
             inv => {
-                self.crash(format!("The CB instruction 0x{:x}@0x{:x} isn't implemented",
+                self.crash(format!("The CB instruction 0x{:02x}@0x{:04x} isn't implemented",
                                    inv,
                                    self.regs.pc));
             }
