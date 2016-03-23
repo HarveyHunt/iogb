@@ -113,7 +113,6 @@ trait ReadW {
     fn readw(&self, cpu: &mut Cpu) -> u16;
 }
 
-// We can use the 16 bit contents of a register pair as a pointer into memory.
 impl ReadB for IndirectAddr {
     fn readb(&self, cpu: &mut Cpu) -> u8 {
         let addr = cpu.iaddr(*self);
