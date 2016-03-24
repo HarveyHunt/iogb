@@ -3,6 +3,7 @@ use std::fmt;
 use super::brom::{BROM_SZ, BOOTROM};
 use interrupt;
 use cartridge;
+use timer;
 
 const WRAM_SZ: usize = 0x8000;
 const ZRAM_SZ: usize = 0x7F;
@@ -15,6 +16,7 @@ pub struct Interconnect {
     boot_mode: bool, // Map brom into bottom of memory?
     // TODO: Make this private and implement wrapper functions
     pub ic: interrupt::InterruptController,
+    timer: timer::Timer,
 }
 
 impl Interconnect {
@@ -26,6 +28,7 @@ impl Interconnect {
             cart: cart,
             boot_mode: true,
             ic: interrupt::InterruptController::new(),
+            timer: timer::Timer::new(),
         }
     }
 
@@ -45,7 +48,12 @@ impl Interconnect {
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF],
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF],
             0xFE00...0xFE9F => 0, // OAM
-            0xFF00...0xFF0E => 0, //MMIO
+            0xFF00...0xFF03 => 0, //MMIO
+            0xFF04 => self.timer.get_div(), 
+            0xFF05 => self.timer.get_tima(), 
+            0xFF06 => self.timer.get_tma(), 
+            0xFF07 => self.timer.get_tac(), 
+            0xFF08...0xFF0E => 0, //MMIO
             0xFF0F => self.ic.iflag,
             0xFF10...0xFF7F => 0, //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F],
@@ -63,7 +71,12 @@ impl Interconnect {
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF] = val,
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF] = val,
             0xFE00...0xFE9F => {} // OAM
-            0xFF00...0xFF0E => {} //MMIO
+            0xFF00...0xFF03 => {} //MMIO
+            0xFF04 => self.timer.set_div(val), 
+            0xFF05 => self.timer.set_tima(val), 
+            0xFF06 => self.timer.set_tma(val), 
+            0xFF07 => self.timer.set_tac(val), 
+            0xFF08...0xFF0E => {} //MMIO
             0xFF0F => self.ic.iflag = val,
             0xFF10...0xFF4F => {} //MMIO
             0xFF50 => self.boot_mode = !(val == 1),
