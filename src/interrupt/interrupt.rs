@@ -70,4 +70,8 @@ impl InterruptController {
     pub fn reset_interrupt(&mut self, int: Interrupt) {
         self.iflag &= !(int as u8);
     }
+
+    pub fn request_interrupt(&mut self, int: Interrupt) {
+        self.iflag |= int as u8;
+    }
 }
