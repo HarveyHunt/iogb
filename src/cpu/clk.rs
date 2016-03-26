@@ -7,4 +7,8 @@ impl Clock {
     pub fn tick(&mut self) {
         self.cycles += 4;
     }
+
+    pub fn add_cycles(&mut self, cycles: u32) {
+        self.cycles += cycles;
+    }
 }

@@ -16,7 +16,7 @@ pub struct Interconnect {
     boot_mode: bool, // Map brom into bottom of memory?
     // TODO: Make this private and implement wrapper functions
     pub ic: interrupt::InterruptController,
-    timer: timer::Timer,
+    pub timer: timer::Timer,
 }
 
 impl Interconnect {

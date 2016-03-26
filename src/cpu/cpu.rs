@@ -336,10 +336,13 @@ impl Cpu {
         }
 
         let ticks = self.dexec();
+        self.clk.add_cycles(ticks);
+        // TODO: Maybe move this into a step function in interconnect...
+        self.interconnect.timer.step(ticks, &mut self.interconnect.ic);
+
         if cfg!(debug_assertions) {
             print!("\t F={:04b}", self.regs.f >> 4);
         }
-
         ticks
     }
 
