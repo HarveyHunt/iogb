@@ -10,6 +10,7 @@ mod interconnect;
 mod cartridge;
 mod interrupt;
 mod timer;
+mod gpu;
 
 fn main() {
     let mut rom = PathBuf::new();
