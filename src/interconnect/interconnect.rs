@@ -4,6 +4,7 @@ use super::brom::{BROM_SZ, BOOTROM};
 use interrupt;
 use cartridge;
 use timer;
+use gpu;
 
 const WRAM_SZ: usize = 0x8000;
 const ZRAM_SZ: usize = 0x7F;
@@ -17,6 +18,7 @@ pub struct Interconnect {
     // TODO: Make this private and implement wrapper functions
     pub ic: interrupt::InterruptController,
     pub timer: timer::Timer,
+    gpu: gpu::Gpu,
 }
 
 impl Interconnect {
@@ -29,6 +31,7 @@ impl Interconnect {
             boot_mode: true,
             ic: interrupt::InterruptController::new(),
             timer: timer::Timer::new(),
+            gpu: gpu::Gpu::new(),
         }
     }
 
@@ -42,12 +45,12 @@ impl Interconnect {
                 }
             }
             0x0100...0x7FFF => self.cart.read_rom(addr), 
-            0x8000...0x9FFF => 0, // GPU
+            0x8000...0x9FFF => self.gpu.read_vram(addr),
             0xA000...0xBFFF => self.cart.read_ram(addr),
             // TODO: 0xD000 -> 0xDFFF is banked on CGB
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF],
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF],
-            0xFE00...0xFE9F => 0, // OAM
+            0xFE00...0xFE9F => self.gpu.read_oam(addr & 0x9F),
             0xFF00...0xFF03 => 0, //MMIO
             0xFF04 => self.timer.get_div(), 
             0xFF05 => self.timer.get_tima(), 
@@ -55,7 +58,9 @@ impl Interconnect {
             0xFF07 => self.timer.get_tac(), 
             0xFF08...0xFF0E => 0, //MMIO
             0xFF0F => self.ic.iflag,
-            0xFF10...0xFF7F => 0, //MMIO
+            0xFF10...0xFF3F => 0, //MMIO
+            0xFF40 => self.gpu.read_lcdc_reg(),
+            0xFF41...0xFF7F => 0, //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F],
             0xFFFF => self.ic.ie, 
             _ => panic!("Can't read 0x{:04x}", addr),
@@ -65,12 +70,12 @@ impl Interconnect {
     pub fn writeb(&mut self, addr: u16, val: u8) {
         match addr {
             0x0000...0x7FFF => self.cart.write_rom(addr, val),
-            0x8000...0x9FFF => {} // GPU
+            0x8000...0x9FFF => self.gpu.write_vram(addr, val),
             0xA000...0xBFFF => self.cart.write_ram(addr, val),
             // TODO: 0xD000 -> 0xDFFF is banked on CGB
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF] = val,
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF] = val,
-            0xFE00...0xFE9F => {} // OAM
+            0xFE00...0xFE9F => self.gpu.write_oam(addr & 0x9F, val),
             0xFF00...0xFF03 => {} //MMIO
             0xFF04 => self.timer.set_div(val), 
             0xFF05 => self.timer.set_tima(val), 
@@ -78,7 +83,9 @@ impl Interconnect {
             0xFF07 => self.timer.set_tac(val), 
             0xFF08...0xFF0E => {} //MMIO
             0xFF0F => self.ic.iflag = val,
-            0xFF10...0xFF4F => {} //MMIO
+            0xFF10...0xFF3F => {} //MMIO
+            0xFF40 => self.gpu.write_lcdc_reg(val),
+            0xFF41...0xFF4F => {} //MMIO
             0xFF50 => self.boot_mode = !(val == 1),
             0xFF51...0xFF7F => {} //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F] = val,
