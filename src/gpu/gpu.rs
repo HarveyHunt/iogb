@@ -16,6 +16,8 @@ pub struct Gpu {
     vram: [u8; VRAM_SZ],
     oam: [u8; OAM_SZ],
     lcd_enable: bool,
+    scroll_x: u8,
+    scroll_y: u8,
 }
 
 impl Gpu {
@@ -25,6 +27,8 @@ impl Gpu {
             vram: [0; VRAM_SZ],
             oam: [0; OAM_SZ],
             lcd_enable: false,
+            scroll_x: 0,
+            scroll_y: 0,
         }
     }
 
@@ -50,6 +54,22 @@ impl Gpu {
 
     pub fn read_lcdc_reg(&self) -> u8 {
         return (self.lcd_enable as u8) << 7;
+    }
+
+    pub fn write_scx(&mut self, val: u8) {
+        self.scroll_x = val;
+    }
+
+    pub fn write_scy(&mut self, val: u8) {
+        self.scroll_y = val;
+    }
+
+    pub fn read_scx(&self) -> u8 {
+        self.scroll_x
+    }
+
+    pub fn read_scy(&self) -> u8 {
+        self.scroll_y
     }
 
     pub fn step(&mut self, cycles: u32, ic: &mut interrupt::InterruptController) {

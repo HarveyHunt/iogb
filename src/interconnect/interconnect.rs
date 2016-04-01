@@ -60,7 +60,10 @@ impl Interconnect {
             0xFF0F => self.ic.iflag,
             0xFF10...0xFF3F => 0, //MMIO
             0xFF40 => self.gpu.read_lcdc_reg(),
-            0xFF41...0xFF7F => 0, //MMIO
+            0xFF41 => 0, //MMIO
+            0xFF42 => self.gpu.read_scy(),
+            0xFF43 => self.gpu.read_scx(),
+            0xFF44...0xFF7F => 0, //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F],
             0xFFFF => self.ic.ie, 
             _ => panic!("Can't read 0x{:04x}", addr),
@@ -85,7 +88,10 @@ impl Interconnect {
             0xFF0F => self.ic.iflag = val,
             0xFF10...0xFF3F => {} //MMIO
             0xFF40 => self.gpu.write_lcdc_reg(val),
-            0xFF41...0xFF4F => {} //MMIO
+            0xFF41 => {} //MMIO
+            0xFF42 => self.gpu.write_scy(val),
+            0xFF43 => self.gpu.write_scx(val),
+            0xFF44...0xFF4F => {} //MMIO
             0xFF50 => self.boot_mode = !(val == 1),
             0xFF51...0xFF7F => {} //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F] = val,
