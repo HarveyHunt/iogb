@@ -18,6 +18,8 @@ pub struct Gpu {
     lcd_enable: bool,
     scroll_x: u8,
     scroll_y: u8,
+    win_x: u8,
+    win_y: u8,
 }
 
 impl Gpu {
@@ -29,6 +31,8 @@ impl Gpu {
             lcd_enable: false,
             scroll_x: 0,
             scroll_y: 0,
+            win_x: 0,
+            win_y: 0,
         }
     }
 
@@ -54,6 +58,22 @@ impl Gpu {
 
     pub fn read_lcdc_reg(&self) -> u8 {
         return (self.lcd_enable as u8) << 7;
+    }
+
+    pub fn write_wx(&mut self, val: u8) {
+        self.win_x = val;
+    }
+
+    pub fn write_wy(&mut self, val: u8) {
+        self.win_y = val;
+    }
+
+    pub fn read_wx(&self) -> u8 {
+        self.win_x
+    }
+
+    pub fn read_wy(&self) -> u8 {
+        self.win_y
     }
 
     pub fn write_scx(&mut self, val: u8) {
