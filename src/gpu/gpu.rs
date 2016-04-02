@@ -16,6 +16,7 @@ pub struct Gpu {
     vram: [u8; VRAM_SZ],
     oam: [u8; OAM_SZ],
     lcd_enable: bool,
+    bg_enable: bool,
     scroll_x: u8,
     scroll_y: u8,
     win_x: u8,
@@ -29,6 +30,7 @@ impl Gpu {
             vram: [0; VRAM_SZ],
             oam: [0; OAM_SZ],
             lcd_enable: false,
+            bg_enable: false,
             scroll_x: 0,
             scroll_y: 0,
             win_x: 0,
@@ -54,10 +56,11 @@ impl Gpu {
 
     pub fn write_lcdc_reg(&mut self, val: u8) {
         self.lcd_enable = (val & 0x80) != 0;
+        self.bg_enable = (val & 0x01) != 0;
     }
 
     pub fn read_lcdc_reg(&self) -> u8 {
-        return (self.lcd_enable as u8) << 7;
+        return (self.lcd_enable as u8) << 7 | (self.bg_enable as u8);
     }
 
     pub fn write_wx(&mut self, val: u8) {
