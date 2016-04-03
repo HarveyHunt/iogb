@@ -60,7 +60,7 @@ impl Interconnect {
             0xFF0F => self.ic.iflag,
             0xFF10...0xFF3F => 0, //MMIO
             0xFF40 => self.gpu.read_lcdc_reg(),
-            0xFF41 => 0, //MMIO
+            0xFF41 => self.gpu.read_stat(),
             0xFF42 => self.gpu.read_scy(),
             0xFF43 => self.gpu.read_scx(),
             0xFF44 => self.gpu.read_ly(), 
@@ -93,7 +93,7 @@ impl Interconnect {
             0xFF0F => self.ic.iflag = val,
             0xFF10...0xFF3F => {} //MMIO
             0xFF40 => self.gpu.write_lcdc_reg(val),
-            0xFF41 => {} //MMIO
+            0xFF41 => self.gpu.write_stat(val),
             0xFF42 => self.gpu.write_scy(val),
             0xFF43 => self.gpu.write_scx(val),
             0xFF44 => {} // LY is Read Only

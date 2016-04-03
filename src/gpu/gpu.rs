@@ -5,10 +5,22 @@ const OAM_SZ: usize = 0xA0;
 
 #[derive(PartialEq)]
 enum Mode {
-    HBlank,
-    VBlank,
-    AccessingOam,
-    AccessingVram,
+    HBlank = 0b00,
+    VBlank = 0b01,
+    AccessingOam = 0b10,
+    AccessingVram = 0b11,
+}
+
+impl Mode {
+    fn as_flag(&self) -> u8 {
+        use self::Mode::*;
+        match *self {
+            HBlank => 0b00,
+            VBlank => 0b01,
+            AccessingOam => 0b10,
+            AccessingVram => 0b11,
+        }
+    }
 }
 
 pub struct Gpu {
@@ -17,6 +29,7 @@ pub struct Gpu {
     oam: [u8; OAM_SZ],
     lcd_enable: bool,
     bg_enable: bool,
+    stat: u8,
     scroll_x: u8,
     scroll_y: u8,
     win_x: u8,
@@ -33,6 +46,7 @@ impl Gpu {
             oam: [0; OAM_SZ],
             lcd_enable: false,
             bg_enable: false,
+            stat: 0,
             scroll_x: 0,
             scroll_y: 0,
             win_x: 0,
@@ -113,6 +127,14 @@ impl Gpu {
 
     pub fn write_lyc(&mut self, val: u8) {
         self.lyc = val;
+    }
+
+    pub fn read_stat(&self) -> u8 {
+        (self.stat & 0xF8) | ((self.lyc == self.ly) as u8) << 3 | self.mode.as_flag()
+    }
+
+    pub fn write_stat(&mut self, val: u8) {
+        self.stat = self.stat & 0x0F | val;
     }
 
     pub fn step(&mut self, cycles: u32, ic: &mut interrupt::InterruptController) {
