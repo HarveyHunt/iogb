@@ -63,7 +63,9 @@ impl Interconnect {
             0xFF41 => 0, //MMIO
             0xFF42 => self.gpu.read_scy(),
             0xFF43 => self.gpu.read_scx(),
-            0xFF44...0xFF49 => 0, //MMIO
+            0xFF44 => self.gpu.read_ly(), 
+            0xFF45 => self.gpu.read_lyc(), 
+            0xFF46...0xFF49 => 0, //MMIO
             0xFF4A => self.gpu.read_wy(),
             0xFF4B => self.gpu.read_wx(),
             0xFF4C...0xFF4F => 0, //MMIO
@@ -94,7 +96,9 @@ impl Interconnect {
             0xFF41 => {} //MMIO
             0xFF42 => self.gpu.write_scy(val),
             0xFF43 => self.gpu.write_scx(val),
-            0xFF44...0xFF49 => {} //MMIO
+            0xFF44 => {} // LY is Read Only
+            0xFF45 => self.gpu.write_lyc(val), 
+            0xFF46...0xFF49 => {} //MMIO
             0xFF4A => self.gpu.write_wy(val),
             0xFF4B => self.gpu.write_wx(val),
             0xFF4C...0xFF4F => {} //MMIO

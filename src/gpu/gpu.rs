@@ -21,6 +21,8 @@ pub struct Gpu {
     scroll_y: u8,
     win_x: u8,
     win_y: u8,
+    ly: u8,
+    lyc: u8,
 }
 
 impl Gpu {
@@ -35,6 +37,8 @@ impl Gpu {
             scroll_y: 0,
             win_x: 0,
             win_y: 0,
+            ly: 0,
+            lyc: 0,
         }
     }
 
@@ -55,7 +59,11 @@ impl Gpu {
     }
 
     pub fn write_lcdc_reg(&mut self, val: u8) {
-        self.lcd_enable = (val & 0x80) != 0;
+        let new_lcd_enable = (val & 0x80) != 0;
+        if self.lcd_enable && !new_lcd_enable {
+            self.ly = 0;
+        }
+        self.lcd_enable = new_lcd_enable;
         self.bg_enable = (val & 0x01) != 0;
     }
 
@@ -95,9 +103,26 @@ impl Gpu {
         self.scroll_y
     }
 
+    pub fn read_ly(&self) -> u8 {
+        self.ly
+    }
+
+    pub fn read_lyc(&self) -> u8 {
+        self.lyc
+    }
+
+    pub fn write_lyc(&mut self, val: u8) {
+        self.lyc = val;
+    }
+
     pub fn step(&mut self, cycles: u32, ic: &mut interrupt::InterruptController) {
         if !self.lcd_enable {
             return;
+        }
+
+        if self.ly >= 144 {
+            self.mode = self::Mode::VBlank;
+            ic.request_interrupt(interrupt::Interrupt::VBlank);
         }
     }
 
