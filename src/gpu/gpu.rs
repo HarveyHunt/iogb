@@ -1,9 +1,10 @@
+use std::fmt;
 use interrupt;
 
 const VRAM_SZ: usize = 0x2000;
 const OAM_SZ: usize = 0xA0;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 enum Mode {
     HBlank = 0b00,
     VBlank = 0b01,
@@ -36,6 +37,25 @@ pub struct Gpu {
     win_y: u8,
     ly: u8,
     lyc: u8,
+}
+
+// TODO: Display the regs as hex
+impl fmt::Debug for Gpu {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("GPU")
+         .field("mode", &self.mode)
+         .field("lcd_enable", &self.lcd_enable)
+         .field("bg_enable", &self.bg_enable)
+         .field("lcdc", &format_args!("0x{:02x}", self.read_lcdc_reg()))
+         .field("stat", &format_args!("0x{:02x}", self.read_stat()))
+         .field("scroll_x", &format_args!("0x{:02x}", self.scroll_x))
+         .field("scroll_y", &format_args!("0x{:02x}", self.scroll_y))
+         .field("win_x", &format_args!("0x{:02x}", self.win_x))
+         .field("win_y", &format_args!("0x{:02x}", self.win_y))
+         .field("ly", &format_args!("0x{:02x}", self.ly))
+         .field("lyc", &format_args!("0x{:02x}", self.lyc))
+         .finish()
+    }
 }
 
 impl Gpu {
