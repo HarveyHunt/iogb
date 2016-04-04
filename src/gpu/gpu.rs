@@ -121,6 +121,10 @@ impl Gpu {
         self.ly
     }
 
+    pub fn write_ly(&mut self, val: u8) {
+        self.ly = val;
+    }
+
     pub fn read_lyc(&self) -> u8 {
         self.lyc
     }

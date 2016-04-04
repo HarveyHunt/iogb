@@ -96,7 +96,7 @@ impl Interconnect {
             0xFF41 => self.gpu.write_stat(val),
             0xFF42 => self.gpu.write_scy(val),
             0xFF43 => self.gpu.write_scx(val),
-            0xFF44 => {} // LY is Read Only
+            0xFF44 => self.gpu.write_ly(val),
             0xFF45 => self.gpu.write_lyc(val), 
             0xFF46...0xFF49 => {} //MMIO
             0xFF4A => self.gpu.write_wy(val),
