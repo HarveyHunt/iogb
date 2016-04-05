@@ -128,6 +128,7 @@ impl fmt::Debug for Interconnect {
         f.debug_struct("Interconnect")
          .field("boot_mode", &self.boot_mode)
          .field("cart", &self.cart)
+         .field("timer", &self.timer)
          .field("gpu", &self.gpu)
          .finish()
     }

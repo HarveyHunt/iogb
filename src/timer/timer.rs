@@ -1,5 +1,7 @@
+use std::fmt;
 use interrupt;
 
+#[derive(Debug)]
 enum InputClockFreq {
     Freq4096 = 4096,
     Freq262144 = 262144,
@@ -27,6 +29,18 @@ pub struct Timer {
     icounter: u32,
     enabled: bool,
     input_freq: InputClockFreq,
+}
+
+impl fmt::Debug for Timer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Timer")
+         .field("enabled", &self.enabled)
+         .field("counter", &format_args!("0x{:02x}", self.counter))
+         .field("modulo", &format_args!("0x{:02x}", self.modulo))
+         .field("counter", &format_args!("0x{:02x}", self.counter))
+         .field("input_freq", &self.input_freq)
+         .finish()
+    }
 }
 
 impl Timer {
