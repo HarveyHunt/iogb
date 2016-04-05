@@ -1,3 +1,4 @@
+use std::fmt;
 use interconnect;
 use super::clk;
 
@@ -85,7 +86,7 @@ pub enum IndirectAddr {
     AddressW,
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct Registers {
     a: u8,
     b: u8,
@@ -97,6 +98,23 @@ struct Registers {
     l: u8,
     pc: u16,
     sp: u16,
+}
+
+impl fmt::Debug for Registers {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Registers")
+         .field("A", &format_args!("0x{:02x}", self.a))
+         .field("B", &format_args!("0x{:02x}", self.b))
+         .field("C", &format_args!("0x{:02x}", self.c))
+         .field("D", &format_args!("0x{:02x}", self.d))
+         .field("E", &format_args!("0x{:02x}", self.e))
+         .field("F", &format_args!("0x{:02x}", self.f))
+         .field("H", &format_args!("0x{:02x}", self.h))
+         .field("L", &format_args!("0x{:02x}", self.l))
+         .field("PC", &format_args!("0x{:04x}", self.pc))
+         .field("SP", &format_args!("0x{:04x}", self.sp))
+         .finish()
+    }
 }
 
 trait ReadB {
