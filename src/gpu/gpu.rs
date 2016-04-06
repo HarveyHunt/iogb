@@ -29,6 +29,7 @@ pub struct Gpu {
     vram: [u8; VRAM_SZ],
     oam: [u8; OAM_SZ],
     lcd_enable: bool,
+    obj_on: bool,
     bg_enable: bool,
     stat: u8,
     scroll_x: u8,
@@ -45,6 +46,7 @@ impl fmt::Debug for Gpu {
         f.debug_struct("GPU")
          .field("mode", &self.mode)
          .field("lcd_enable", &self.lcd_enable)
+         .field("obj_on", &self.obj_on)
          .field("bg_enable", &self.bg_enable)
          .field("lcdc", &format_args!("0x{:02x}", self.read_lcdc_reg()))
          .field("stat", &format_args!("0x{:02x}", self.read_stat()))
@@ -65,6 +67,7 @@ impl Gpu {
             vram: [0; VRAM_SZ],
             oam: [0; OAM_SZ],
             lcd_enable: false,
+            obj_on: false,
             bg_enable: false,
             stat: 0,
             scroll_x: 0,
@@ -98,11 +101,12 @@ impl Gpu {
             self.ly = 0;
         }
         self.lcd_enable = new_lcd_enable;
+        self.obj_on = (val & 0x02) != 0;
         self.bg_enable = (val & 0x01) != 0;
     }
 
     pub fn read_lcdc_reg(&self) -> u8 {
-        return (self.lcd_enable as u8) << 7 | (self.bg_enable as u8);
+        return (self.lcd_enable as u8) << 7 | (self.obj_on as u8) << 1 | (self.bg_enable as u8);
     }
 
     pub fn write_wx(&mut self, val: u8) {
