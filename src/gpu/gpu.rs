@@ -24,6 +24,57 @@ impl Mode {
     }
 }
 
+#[derive(Debug)]
+enum Colour {
+    White = 0,
+    LightGrey = 1,
+    DarkGrey = 2,
+    Black = 3,
+}
+
+impl Colour {
+    fn from_bits(col: u8) -> Colour {
+        use self::Colour::*;
+        match col {
+            0 => White,
+            1 => LightGrey,
+            2 => DarkGrey,
+            3 => Black,
+            _ => panic!("Invalid colour shade 0x{:02x}", col),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Palette {
+    darkest: Colour,
+    dark: Colour,
+    light: Colour,
+    lightest: Colour,
+    reg: u8,
+}
+
+impl Palette {
+    fn new() -> Palette {
+        use self::Colour::*;
+        Palette {
+            reg: 0,
+            darkest: White,
+            dark: White,
+            light: White,
+            lightest: White,
+        }
+    }
+
+    fn set_reg(&mut self, val: u8) {
+        self.reg = val;
+        self.darkest = Colour::from_bits((val >> 6) & 0x03);
+        self.dark = Colour::from_bits((val >> 4) & 0x03);
+        self.light = Colour::from_bits((val >> 2) & 0x03);
+        self.lightest = Colour::from_bits(val & 0x03);
+    }
+}
+
 pub struct Gpu {
     mode: Mode,
     vram: [u8; VRAM_SZ],
@@ -39,6 +90,9 @@ pub struct Gpu {
     win_y: u8,
     ly: u8,
     lyc: u8,
+    bgp: self::Palette,
+    obp0: self::Palette,
+    obp1: self::Palette,
 }
 
 // TODO: Display the regs as hex
@@ -79,6 +133,9 @@ impl Gpu {
             win_y: 0,
             ly: 0,
             lyc: 0,
+            bgp: Palette::new(),
+            obp0: Palette::new(),
+            obp1: Palette::new(),
         }
     }
 
@@ -168,6 +225,30 @@ impl Gpu {
 
     pub fn write_stat(&mut self, val: u8) {
         self.stat = self.stat & 0x0F | val;
+    }
+
+    pub fn read_bgp(&self) -> u8 {
+        self.bgp.reg
+    }
+
+    pub fn read_obp0(&self) -> u8 {
+        self.obp0.reg
+    }
+
+    pub fn read_obp1(&self) -> u8 {
+        self.obp1.reg
+    }
+
+    pub fn write_bgp(&mut self, val: u8) {
+        self.bgp.set_reg(val);
+    }
+
+    pub fn write_obp0(&mut self, val: u8) {
+        self.obp0.set_reg(val);
+    }
+
+    pub fn write_obp1(&mut self, val: u8) {
+        self.obp1.set_reg(val);
     }
 
     pub fn step(&mut self, cycles: u32, ic: &mut interrupt::InterruptController) {
