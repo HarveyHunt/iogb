@@ -622,7 +622,6 @@ impl Cpu {
     }
 
     fn cb_dexec(&mut self) -> u32 {
-        use self::RegsW::*;
         use self::RegsB::*;
         let op = self.fetchb();
         if cfg!(debug_assertions) {
