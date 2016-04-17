@@ -262,6 +262,17 @@ impl Gpu {
         self.obp1.set_reg(val);
     }
 
+    fn check_cmp_int(&mut self, ic: &mut interrupt::InterruptController) {
+        if self.ly != self.lyc {
+            self.stat.remove(STAT_CMP);
+        } else {
+            self.stat.insert(STAT_CMP);
+            if self.stat.contains(STAT_CMP_INT) {
+                ic.request_interrupt(interrupt::Interrupt::LCDCStat);
+            }
+        }
+    }
+
     pub fn step(&mut self, cycles: u32, ic: &mut interrupt::InterruptController) {
         if !self.lcd_enable {
             return;
