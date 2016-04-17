@@ -12,6 +12,16 @@ enum Mode {
     AccessingVram = 0b11,
 }
 
+bitflags!(
+    flags StatReg: u8 {
+        const STAT_CMP = 1 << 2,
+        const STAT_HBLANK_INT = 1 << 3,
+        const STAT_VBLANK_INT = 1 << 4,
+        const STAT_OAM_INT = 1 << 5,
+        const STAT_CMP_INT = 1 << 6,
+    }
+);
+
 impl Mode {
     fn as_flag(&self) -> u8 {
         use self::Mode::*;
@@ -83,7 +93,7 @@ pub struct Gpu {
     obj_on: bool,
     obj_size: u8, // 8x8 or 8x16
     bg_enable: bool,
-    stat: u8,
+    stat: StatReg,
     scroll_x: u8,
     scroll_y: u8,
     win_x: u8,
@@ -126,7 +136,7 @@ impl Gpu {
             obj_on: false,
             obj_size: 8,
             bg_enable: false,
-            stat: 0,
+            stat: StatReg::empty(),
             scroll_x: 0,
             scroll_y: 0,
             win_x: 0,
@@ -220,11 +230,12 @@ impl Gpu {
     }
 
     pub fn read_stat(&self) -> u8 {
-        (self.stat & 0xF8) | ((self.lyc == self.ly) as u8) << 3 | self.mode.as_flag()
+        self.stat.bits | self.mode.as_flag()
     }
 
     pub fn write_stat(&mut self, val: u8) {
-        self.stat = self.stat & 0x0F | val;
+        let nstat = StatReg::from_bits_truncate(val);
+        self.stat = (self.stat & STAT_CMP) | (nstat);
     }
 
     pub fn read_bgp(&self) -> u8 {

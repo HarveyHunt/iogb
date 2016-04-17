@@ -1,6 +1,9 @@
 #![deny(trivial_casts, trivial_numeric_casts)]
 extern crate argparse;
 
+#[macro_use]
+extern crate bitflags;
+
 use std::path::PathBuf;
 use argparse::{ArgumentParser, Parse, Print};
 
