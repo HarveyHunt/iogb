@@ -127,6 +127,12 @@ impl Interconnect {
         self.writeb(addr, (val & 0xFF) as u8);
         self.writeb(addr + 1, (val >> 8) as u8);
     }
+
+    pub fn step(&mut self, ticks: u32) -> u32 {
+        self.timer.step(ticks, &mut self.ic);
+        // TODO, This assumes that gpu and timer stuff takes no ticks...
+        ticks
+    }
 }
 
 impl fmt::Debug for Interconnect {

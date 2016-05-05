@@ -355,13 +355,12 @@ impl Cpu {
 
         let ticks = self.dexec();
         self.clk.add_cycles(ticks);
-        // TODO: Maybe move this into a step function in interconnect...
-        self.interconnect.timer.step(ticks, &mut self.interconnect.ic);
 
         if cfg!(debug_assertions) {
             print!("\t F={:04b}", self.regs.f >> 4);
         }
-        ticks
+
+        self.interconnect.step(ticks)
     }
 
     // Decode and execute, returning the number of ticks that execution took.
@@ -1170,6 +1169,7 @@ impl Cpu {
         if !c.test(self) {
             return 8;
         }
+
         addr += self.regs.readw(self::RegsW::PC) as i16;
         self.regs.writew(self::RegsW::PC, addr as u16);
         12
