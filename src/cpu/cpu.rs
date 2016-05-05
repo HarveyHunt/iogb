@@ -659,6 +659,22 @@ impl Cpu {
             0x1D => self.rr(L),
             0x1E => self.rr(self::IndirectAddr::HL),
             0x1F => self.rr(A),
+            0x20 => self.sla(B),
+            0x21 => self.sla(C),
+            0x22 => self.sla(D),
+            0x23 => self.sla(E),
+            0x24 => self.sla(H),
+            0x25 => self.sla(L),
+            0x26 => self.sla(self::IndirectAddr::HL),
+            0x27 => self.sla(A),
+            0x28 => self.sra(B),
+            0x29 => self.sra(C),
+            0x2A => self.sra(D),
+            0x2B => self.sra(E),
+            0x2C => self.sra(H),
+            0x2D => self.sra(L),
+            0x2E => self.sra(self::IndirectAddr::HL),
+            0x2F => self.sra(A),
             0x30 => self.swap(B),
             0x31 => self.swap(C),
             0x32 => self.swap(D),
@@ -667,6 +683,14 @@ impl Cpu {
             0x35 => self.swap(L),
             0x36 => self.swap(self::IndirectAddr::HL),
             0x37 => self.swap(A),
+            0x38 => self.srl(B),
+            0x39 => self.srl(C),
+            0x3A => self.srl(D),
+            0x3B => self.srl(E),
+            0x3C => self.srl(H),
+            0x3D => self.srl(L),
+            0x3E => self.srl(self::IndirectAddr::HL),
+            0x3F => self.srl(A),
             0x40 => self.bit(0, B),
             0x41 => self.bit(0, C),
             0x42 => self.bit(0, D),
@@ -1374,6 +1398,56 @@ impl Cpu {
         self.set_flag(H, false);
         self.set_flag(C, cout);
         out
+    }
+
+    fn alu_sxx(&mut self, dir: RotateDir, preserve_msb: bool, val: u8) -> u8 {
+        use self::Flags::*;
+        let cout: bool;
+
+        let out = if dir == self::RotateDir::L {
+            cout = (val & 0x80) != 0;
+            val << 1
+        } else {
+            let msb = (preserve_msb as u8 & (val & 0x80)) << 7;
+            cout = (val & 0x01) != 0;
+            val >> 1 | msb
+        };
+
+        self.set_flag(Z, out == 0);
+        self.set_flag(N, false);
+        self.set_flag(H, false);
+        self.set_flag(C, cout);
+        out
+    }
+
+    // SLA r | (hl)
+    // Z N H C
+    // Z 0 0 C : 8 | 12
+    fn sla<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_sxx(self::RotateDir::L, false, v);
+        addr.writeb(self, v);
+        8
+    }
+
+    // SRA r | (hl)
+    // Z N H C
+    // Z 0 0 C : 8 | 12
+    fn sra<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_sxx(self::RotateDir::R, true, v);
+        addr.writeb(self, v);
+        8
+    }
+
+    // SRL r | (hl)
+    // Z N H C
+    // Z 0 0 C : 8 | 12
+    fn srl<A: ReadB + WriteB>(&mut self, addr: A) -> u32 {
+        let mut v = addr.readb(self);
+        v = self.alu_sxx(self::RotateDir::R, false, v);
+        addr.writeb(self, v);
+        8
     }
 
     // EI
