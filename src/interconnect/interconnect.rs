@@ -130,6 +130,7 @@ impl Interconnect {
 
     pub fn step(&mut self, ticks: u32) -> u32 {
         self.timer.step(ticks, &mut self.ic);
+        self.gpu.step(ticks, &mut self.ic);
         // TODO, This assumes that gpu and timer stuff takes no ticks...
         ticks
     }

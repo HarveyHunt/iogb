@@ -3,6 +3,10 @@ use interrupt;
 
 const VRAM_SZ: usize = 0x2000;
 const OAM_SZ: usize = 0xA0;
+const HBLANK_CYCLES: i16 = 204;
+const ACCESSING_OAM_CYCLES: i16 = 80;
+const ACCESSING_VRAM_CYCLES: i16 = 172;
+const VBLANK_FULL_LINE_CYCLES: i16 = 576;
 
 #[derive(PartialEq, Debug)]
 enum Mode {
@@ -87,6 +91,7 @@ impl Palette {
 
 pub struct Gpu {
     mode: Mode,
+    ticks: i16,
     vram: [u8; VRAM_SZ],
     oam: [u8; OAM_SZ],
     lcd_enable: bool,
@@ -129,6 +134,7 @@ impl fmt::Debug for Gpu {
 impl Gpu {
     pub fn new() -> Gpu {
         Gpu {
+            ticks: ACCESSING_OAM_CYCLES,
             mode: Mode::AccessingOam,
             vram: [0; VRAM_SZ],
             oam: [0; OAM_SZ],
@@ -273,14 +279,65 @@ impl Gpu {
         }
     }
 
+    fn change_mode(&mut self, mode: self::Mode, ic: &mut interrupt::InterruptController) {
+        self.mode = mode;
+        match self.mode {
+            Mode::HBlank => self.ticks += HBLANK_CYCLES,
+            Mode::VBlank => {
+                self.ticks += VBLANK_FULL_LINE_CYCLES;
+                ic.request_interrupt(interrupt::Interrupt::VBlank);
+                if self.stat.contains(STAT_VBLANK_INT) {
+                    ic.request_interrupt(interrupt::Interrupt::LCDCStat);
+                }
+            }
+            Mode::AccessingOam => {
+                self.ticks += ACCESSING_OAM_CYCLES;
+                if self.stat.contains(STAT_OAM_INT) {
+                    ic.request_interrupt(interrupt::Interrupt::LCDCStat);
+                }
+            }
+            Mode::AccessingVram => self.ticks += ACCESSING_VRAM_CYCLES,
+        }
+    }
+
     pub fn step(&mut self, cycles: u32, ic: &mut interrupt::InterruptController) {
         if !self.lcd_enable {
             return;
         }
 
-        if self.ly >= 144 {
-            self.mode = self::Mode::VBlank;
-            ic.request_interrupt(interrupt::Interrupt::VBlank);
+        self.ticks -= cycles as i16;
+
+        // We haven't finished our current mode!
+        if self.ticks > 0 {
+            return;
+        }
+
+        match self.mode {
+            Mode::HBlank => {
+                self.ly += 1;
+                if self.ly >= 144 {
+                    self.change_mode(self::Mode::VBlank, ic);
+                } else {
+                    self.change_mode(self::Mode::AccessingOam, ic);
+                }
+                self.check_cmp_int(ic);
+            }
+            Mode::VBlank => {
+                self.ly += 1;
+                if self.ly <= 153 {
+                    self.ticks += VBLANK_FULL_LINE_CYCLES;
+                } else {
+                    self.ly = 0;
+                    self.change_mode(self::Mode::AccessingOam, ic);
+                }
+                self.check_cmp_int(ic);
+            }
+            Mode::AccessingOam => {
+                self.change_mode(self::Mode::AccessingVram, ic);
+            }
+            Mode::AccessingVram => {
+                self.change_mode(self::Mode::HBlank, ic);
+            }
         }
     }
 
