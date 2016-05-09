@@ -1220,10 +1220,8 @@ impl Cpu {
     }
 
     fn pushw(&mut self, val: u16) {
-        let mut sp = self.regs.readw(self::RegsW::SP).wrapping_sub(1);
-        self.interconnect.writeb(sp, (val >> 8) as u8);
-        sp = sp.wrapping_sub(1);
-        self.interconnect.writeb(sp, val as u8);
+        let sp = self.regs.readw(self::RegsW::SP).wrapping_sub(2);
+        self.interconnect.writew(sp, val);
         self.regs.writew(self::RegsW::SP, sp);
     }
 
