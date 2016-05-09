@@ -380,6 +380,7 @@ impl Cpu {
             0x05 => self.dec(B),
             0x06 => self.ld(B, self::ImmediateB),
             0x07 => self.rlca(),
+            0x08 => self.ldw_nn_sp(),
             0x09 => self.addw(BC),
             0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0B => self.decw(BC),
@@ -955,6 +956,16 @@ impl Cpu {
         let v = i.readw(self);
         self.regs.writew(dd, v);
         8
+    }
+
+    // LD (nn) SP
+    // Z N H C
+    // - - - - : 20
+    fn ldw_nn_sp(&mut self) -> u32 {
+        let addr = self.fetchw();
+        let sp = self.regs.readw(self::RegsW::SP);
+        self.interconnect.writew(addr, sp);
+        20
     }
 
     // ADD HL ss
