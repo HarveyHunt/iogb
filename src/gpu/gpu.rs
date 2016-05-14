@@ -3,7 +3,7 @@ use interrupt;
 
 const VRAM_TILES: usize = 384;
 const TILE_MAP_SZ: usize = 0x400;
-const OAM_SZ: usize = 0xA0;
+const SPRITE_COUNT: usize = 40;
 const HBLANK_CYCLES: i16 = 204;
 const ACCESSING_OAM_CYCLES: i16 = 80;
 const ACCESSING_VRAM_CYCLES: i16 = 172;
@@ -16,6 +16,15 @@ enum Mode {
     AccessingOam = 0b10,
     AccessingVram = 0b11,
 }
+
+bitflags!(
+    flags SpriteFlags: u8 {
+        const SPRITE_PRIORITY = 1 << 7,
+        const SPRITE_Y_FLIP = 1 << 6,
+        const SPRITE_X_FLIP = 1 << 5,
+        const SPRITE_PALETTE = 1 << 4,
+    }
+);
 
 bitflags!(
     flags StatReg: u8 {
@@ -44,6 +53,23 @@ struct Tile {
     pixels: [u8; 16],
 }
 
+#[derive(Copy, Clone)]
+struct Sprite {
+    x: u8,
+    y: u8,
+    tile_index: u8,
+    flags: SpriteFlags,
+}
+
+impl Sprite {
+    pub fn new() -> Sprite {
+        Sprite {
+            x: 0,
+            y: 0,
+            tile_index: 0,
+            flags: SpriteFlags::empty(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -100,7 +126,7 @@ impl Palette {
 pub struct Gpu {
     mode: Mode,
     ticks: i16,
-    oam: [u8; OAM_SZ],
+    oam: [Sprite; SPRITE_COUNT],
     lcd_enable: bool,
     obj_on: bool,
     obj_size: u8, // 8x8 or 8x16
@@ -146,7 +172,7 @@ impl Gpu {
         Gpu {
             ticks: ACCESSING_OAM_CYCLES,
             mode: Mode::AccessingOam,
-            oam: [0; OAM_SZ],
+            oam: [Sprite::new(); SPRITE_COUNT],
             lcd_enable: false,
             obj_on: false,
             obj_size: 8,
@@ -385,13 +411,27 @@ impl Gpu {
         if self.mode == self::Mode::AccessingVram || self.mode == self::Mode::AccessingOam {
             return 0xFF;
         }
-        self.oam[(addr as usize) & OAM_SZ - 1]
+        let sprite = &self.oam[addr as usize >> 2];
+        match addr % 4 {
+            0 => sprite.y,
+            1 => sprite.x,
+            2 => sprite.tile_index,
+            3 => sprite.flags.bits(),
+            _ => panic!(),
+        }
     }
 
     pub fn write_oam(&mut self, addr: u16, val: u8) {
         if self.mode == self::Mode::AccessingVram || self.mode == self::Mode::AccessingOam {
             return;
         }
-        self.oam[(addr as usize) & OAM_SZ - 1] = val;
+        let sprite = &mut self.oam[addr as usize >> 2];
+        match addr % 4 {
+            0 => sprite.y = val,
+            1 => sprite.x = val,
+            2 => sprite.tile_index = val,
+            3 => sprite.flags = SpriteFlags::from_bits_truncate(val),
+            _ => panic!(),
+        }
     }
 }
