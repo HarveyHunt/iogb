@@ -1,7 +1,8 @@
 use std::fmt;
 use interrupt;
 
-const VRAM_SZ: usize = 0x2000;
+const VRAM_TILES: usize = 384;
+const TILE_MAP_SZ: usize = 0x400;
 const OAM_SZ: usize = 0xA0;
 const HBLANK_CYCLES: i16 = 204;
 const ACCESSING_OAM_CYCLES: i16 = 80;
@@ -36,6 +37,13 @@ impl Mode {
             AccessingVram => 0b11,
         }
     }
+}
+
+#[derive(Copy, Clone, Default)]
+struct Tile {
+    pixels: [u8; 16],
+}
+
 }
 
 #[derive(Debug)]
@@ -92,7 +100,6 @@ impl Palette {
 pub struct Gpu {
     mode: Mode,
     ticks: i16,
-    vram: [u8; VRAM_SZ],
     oam: [u8; OAM_SZ],
     lcd_enable: bool,
     obj_on: bool,
@@ -108,6 +115,9 @@ pub struct Gpu {
     bgp: self::Palette,
     obp0: self::Palette,
     obp1: self::Palette,
+    tile_set: [Tile; VRAM_TILES],
+    tile_map1: [u8; TILE_MAP_SZ],
+    tile_map2: [u8; TILE_MAP_SZ],
 }
 
 // TODO: Display the regs as hex
@@ -136,7 +146,6 @@ impl Gpu {
         Gpu {
             ticks: ACCESSING_OAM_CYCLES,
             mode: Mode::AccessingOam,
-            vram: [0; VRAM_SZ],
             oam: [0; OAM_SZ],
             lcd_enable: false,
             obj_on: false,
@@ -152,23 +161,54 @@ impl Gpu {
             bgp: Palette::new(),
             obp0: Palette::new(),
             obp1: Palette::new(),
+            tile_set: [Tile::default(); VRAM_TILES],
+            tile_map1: [0; TILE_MAP_SZ],
+            tile_map2: [0; TILE_MAP_SZ],
         }
     }
 
-    pub fn read_vram(&self, addr: u16) -> u8 {
-        // TODO: Handle banking of VRAM
+    pub fn read_tileset(&self, addr: u16) -> u8 {
         if self.mode == self::Mode::AccessingVram {
             return 0xFF;
         }
-        self.vram[(addr as usize) & VRAM_SZ - 1]
+        let tile = &self.tile_set[addr as usize >> 4];
+        tile.pixels[addr as usize % 16]
     }
 
-    pub fn write_vram(&mut self, addr: u16, val: u8) {
-        // TODO: Handle banking of VRAM
+    pub fn write_tileset(&mut self, addr: u16, val: u8) {
         if self.mode == self::Mode::AccessingVram {
             return;
         }
-        self.vram[(addr as usize) & VRAM_SZ - 1] = val;
+        let tile = &mut self.tile_set[addr as usize >> 4];
+        tile.pixels[addr as usize % 16] = val;
+    }
+
+    pub fn read_tilemap1(&self, addr: u16) -> u8 {
+        if self.mode == self::Mode::AccessingVram {
+            return 0xFF;
+        }
+        self.tile_map1[addr as usize]
+    }
+
+    pub fn write_tilemap1(&mut self, addr: u16, val: u8) {
+        if self.mode == self::Mode::AccessingVram {
+            return;
+        }
+        self.tile_map1[addr as usize] = val;
+    }
+
+    pub fn read_tilemap2(&self, addr: u16) -> u8 {
+        if self.mode == self::Mode::AccessingVram {
+            return 0xFF;
+        }
+        self.tile_map2[addr as usize]
+    }
+
+    pub fn write_tilemap2(&mut self, addr: u16, val: u8) {
+        if self.mode == self::Mode::AccessingVram {
+            return;
+        }
+        self.tile_map2[addr as usize] = val;
     }
 
     pub fn write_lcdc_reg(&mut self, val: u8) {

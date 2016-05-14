@@ -45,7 +45,9 @@ impl Interconnect {
                 }
             }
             0x0100...0x7FFF => self.cart.read_rom(addr), 
-            0x8000...0x9FFF => self.gpu.read_vram(addr),
+            0x8000...0x97FF => self.gpu.read_tileset(addr & 0x17FF),
+            0x9800...0x9BFF => self.gpu.read_tilemap1(addr & 0x03FF),
+            0x9C00...0x9FFF => self.gpu.read_tilemap2(addr & 0x03FF),
             0xA000...0xBFFF => self.cart.read_ram(addr),
             // TODO: 0xD000 -> 0xDFFF is banked on CGB
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF],
@@ -81,7 +83,9 @@ impl Interconnect {
     pub fn writeb(&mut self, addr: u16, val: u8) {
         match addr {
             0x0000...0x7FFF => self.cart.write_rom(addr, val),
-            0x8000...0x9FFF => self.gpu.write_vram(addr, val),
+            0x8000...0x97FF => self.gpu.write_tileset(addr & 0x17FF, val),
+            0x9800...0x9BFF => self.gpu.write_tilemap1(addr & 0x03FF, val),
+            0x9C00...0x9FFF => self.gpu.write_tilemap2(addr & 0x03FF, val),
             0xA000...0xBFFF => self.cart.write_ram(addr, val),
             // TODO: 0xD000 -> 0xDFFF is banked on CGB
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF] = val,
