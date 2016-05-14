@@ -128,8 +128,12 @@ pub struct Gpu {
     ticks: i16,
     oam: [Sprite; SPRITE_COUNT],
     lcd_enable: bool,
-    obj_on: bool,
+    win_tile_map: bool,
+    win_enable: bool,
+    bg_tile_set: bool,
+    bg_tile_map: bool,
     obj_size: u8, // 8x8 or 8x16
+    obj_enable: bool,
     bg_enable: bool,
     stat: StatReg,
     scroll_x: u8,
@@ -152,8 +156,12 @@ impl fmt::Debug for Gpu {
         f.debug_struct("GPU")
          .field("mode", &self.mode)
          .field("lcd_enable", &self.lcd_enable)
-         .field("obj_on", &self.obj_on)
+         .field("win_tile_map", &self.win_tile_map)
+         .field("win_enable", &self.win_enable)
+         .field("bg_tile_set", &self.bg_tile_set)
+         .field("bg_tile_map", &self.bg_tile_map)
          .field("obj_size", &self.obj_size)
+         .field("obj_enable", &self.obj_enable)
          .field("bg_enable", &self.bg_enable)
          .field("lcdc", &format_args!("0x{:02x}", self.read_lcdc_reg()))
          .field("stat", &format_args!("0x{:02x}", self.read_stat()))
@@ -174,8 +182,12 @@ impl Gpu {
             mode: Mode::AccessingOam,
             oam: [Sprite::new(); SPRITE_COUNT],
             lcd_enable: false,
-            obj_on: false,
+            win_tile_map: false,
+            win_enable: false,
+            bg_tile_set: false,
+            bg_tile_map: false,
             obj_size: 8,
+            obj_enable: false,
             bg_enable: false,
             stat: StatReg::empty(),
             scroll_x: 0,
@@ -243,14 +255,21 @@ impl Gpu {
             self.ly = 0;
         }
         self.lcd_enable = new_lcd_enable;
-        self.obj_on = (val & 0x02) != 0;
+        self.win_tile_map = (val & 0x40) != 0;
+        self.win_enable = (val & 0x20) != 0;
+        self.bg_tile_set = (val & 0x10) != 0;
+        self.bg_tile_map = (val & 0x08) != 0;
         self.obj_size = ((val & 0x04) == 16) as u8;
+        self.obj_enable = (val & 0x02) != 0;
         self.bg_enable = (val & 0x01) != 0;
     }
 
     pub fn read_lcdc_reg(&self) -> u8 {
-        return (self.lcd_enable as u8) << 7 | ((self.obj_size == 16) as u8) << 2 |
-               (self.obj_on as u8) << 1 | (self.bg_enable as u8);
+        return (self.lcd_enable as u8) << 7 | (self.win_tile_map as u8) << 6 |
+               (self.win_enable as u8) << 5 | (self.bg_tile_set as u8) << 4 |
+               (self.bg_tile_map as u8) << 3 | ((self.obj_size == 16) as u8) << 2 |
+               (self.obj_enable as u8) << 1 |
+               (self.bg_enable as u8);
     }
 
     pub fn write_wx(&mut self, val: u8) {
