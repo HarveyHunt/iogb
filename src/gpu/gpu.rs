@@ -9,6 +9,9 @@ const ACCESSING_OAM_CYCLES: i16 = 80;
 const ACCESSING_VRAM_CYCLES: i16 = 172;
 const VBLANK_FULL_LINE_CYCLES: i16 = 576;
 
+const SCREEN_W: usize = 160;
+const SCREEN_H: usize = 144;
+
 #[derive(PartialEq, Debug)]
 enum Mode {
     HBlank = 0b00,
@@ -127,6 +130,7 @@ pub struct Gpu {
     mode: Mode,
     ticks: i16,
     oam: [Sprite; SPRITE_COUNT],
+    buffer: [u8; SCREEN_W * SCREEN_H],
     lcd_enable: bool,
     win_tile_map: bool,
     win_enable: bool,
@@ -181,6 +185,7 @@ impl Gpu {
             ticks: ACCESSING_OAM_CYCLES,
             mode: Mode::AccessingOam,
             oam: [Sprite::new(); SPRITE_COUNT],
+            buffer: [0; SCREEN_W * SCREEN_H],
             lcd_enable: false,
             win_tile_map: false,
             win_enable: false,
@@ -421,8 +426,55 @@ impl Gpu {
                 self.change_mode(self::Mode::AccessingVram, ic);
             }
             Mode::AccessingVram => {
+                self.render_line();
                 self.change_mode(self::Mode::HBlank, ic);
             }
+        }
+    }
+
+    pub fn render_line(&mut self) {
+        let start = self.ly as usize * SCREEN_W;
+        let end = start + SCREEN_W;
+        self.render_background(start, end);
+        self.render_window(start, end);
+        self.render_sprites(start, end);
+    }
+
+    fn render_background(&mut self, start: usize, end: usize) {
+        if !self.bg_enable {
+            return;
+        }
+        let y = self.ly.wrapping_add(self.scroll_y);
+        let row = (y >> 3) as usize;
+        let tile_map = if !self.bg_tile_map {
+            &self.tile_map1
+        } else {
+            &self.tile_map2
+        };
+
+        for i in 0..SCREEN_W {
+            let x = i.wrapping_add(self.scroll_x as usize);
+            let column = x >> 3;
+
+            let tile_num = tile_map[(row * 32) + column] as usize;
+            let tile = if self.bg_tile_set {
+                &self.tile_set[tile_num]
+            } else {
+                // FIXME: I'm not convinced this is correct...
+                &self.tile_set[(tile_num as i8 as i16 + 128) as usize]
+            };
+        }
+    }
+
+    fn render_window(&mut self, start: usize, end: usize) {
+        if !self.win_enable {
+            return;
+        }
+    }
+
+    fn render_sprites(&mut self, start: usize, end: usize) {
+        if !self.obj_enable {
+            return;
         }
     }
 
