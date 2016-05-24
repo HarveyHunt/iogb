@@ -53,6 +53,7 @@ impl Interconnect {
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF],
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF],
             0xFE00...0xFE9F => self.gpu.read_oam(addr & 0x9F),
+            0xFEA0...0xFEFF => 0, // Gap
             0xFF00...0xFF03 => 0, //MMIO
             0xFF04 => self.timer.get_div(), 
             0xFF05 => self.timer.get_tima(), 
@@ -91,6 +92,7 @@ impl Interconnect {
             0xC000...0xDFFF => self.wram[addr as usize & 0x1FFF] = val,
             0xE000...0xFDFF => self.wram[addr as usize & 0x1FFF] = val,
             0xFE00...0xFE9F => self.gpu.write_oam(addr & 0x9F, val),
+            0xFEA0...0xFEFF => {} // Gap
             0xFF00...0xFF03 => {} //MMIO
             0xFF04 => self.timer.set_div(val), 
             0xFF05 => self.timer.set_tima(val), 
