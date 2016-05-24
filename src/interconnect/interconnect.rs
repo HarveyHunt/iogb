@@ -6,7 +6,7 @@ use cartridge;
 use timer;
 use gpu;
 
-const WRAM_SZ: usize = 0x8000;
+const WRAM_SZ: usize = 0x2000;
 const ZRAM_SZ: usize = 0x7F;
 
 pub struct Interconnect {
