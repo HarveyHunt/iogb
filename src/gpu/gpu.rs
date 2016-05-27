@@ -75,7 +75,7 @@ impl Sprite {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 enum Colour {
     White = 0,
     LightGrey = 1,
@@ -114,6 +114,16 @@ impl Palette {
             dark: White,
             light: White,
             lightest: White,
+        }
+    }
+
+    fn lookup(&self, colour: &Colour) -> Colour {
+        use self::Colour::*;
+        match *colour {
+            Black => self.darkest,
+            DarkGrey => self.dark,
+            LightGrey => self.light,
+            White => self.lightest,
         }
     }
 
@@ -454,8 +464,12 @@ impl Gpu {
 
         for i in 0..SCREEN_W {
             let x = i.wrapping_add(self.scroll_x as usize);
+            let bit = x % 8;
             let column = x >> 3;
+            // The first of two rows in the tile that we are going to render.
+            let tile_row = (y % 8) * 2;
 
+            // Find the required tile...
             let tile_num = tile_map[(row * 32) + column] as usize;
             let tile = if self.bg_tile_set {
                 &self.tile_set[tile_num]
@@ -463,6 +477,19 @@ impl Gpu {
                 // FIXME: I'm not convinced this is correct...
                 &self.tile_set[(tile_num as i8 as i16 + 128) as usize]
             };
+
+            // The 2 bytes that we are going to use to calculate a colour value.
+            // 1 - x - x - - - - 0 1 2 3 0 0 0 0
+            // 2 - - x x - - - - 0 1 2 3 0 0 0 0
+            let row_data = (tile.pixels[tile_row as usize], tile.pixels[tile_row as usize + 1]);
+
+            // Bit denotes the column in the row_data we are going to use
+            let colour_number = (((row_data.0 >> bit) & 1) * 2) | ((row_data.1 >> bit) & 1);
+            // Convert the raw colour number into a Colour and look it up in the
+            // BGP so that we can get the _real_ Colour.
+            let palette_colour = Colour::from_bits(colour_number);
+            let colour = self.bgp.lookup(&palette_colour);
+            self.buffer[start + i] = colour as u8;
         }
     }
 
