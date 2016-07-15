@@ -1,6 +1,5 @@
 use std::fmt;
 
-use super::brom::{BROM_SZ, BOOTROM};
 use interrupt;
 use cartridge;
 use timer;
@@ -10,7 +9,7 @@ const WRAM_SZ: usize = 0x2000;
 const ZRAM_SZ: usize = 0x7F;
 
 pub struct Interconnect {
-    brom: [u8; BROM_SZ], // 0x0000 -> 0x00FF
+    brom: Vec<u8>, // 0x0000 -> 0x00FF
     wram: [u8; WRAM_SZ], // 0xC000 -> 0xDFFF, shadowed @ 0xE000 -> 0xFDFF
     zram: [u8; ZRAM_SZ], // 0xFF80 -> 0xFFFF
     cart: cartridge::Cartridge,
@@ -22,9 +21,9 @@ pub struct Interconnect {
 }
 
 impl Interconnect {
-    pub fn new(cart: cartridge::Cartridge) -> Interconnect {
+    pub fn new(cart: cartridge::Cartridge, bootrom: Vec<u8>) -> Interconnect {
         Interconnect {
-            brom: BOOTROM,
+            brom: bootrom,
             wram: [0; WRAM_SZ],
             zram: [0; ZRAM_SZ],
             cart: cart,

@@ -15,9 +15,11 @@ mod cartridge;
 mod interrupt;
 mod timer;
 mod gpu;
+mod bootrom;
 
 fn main() {
     let mut rom = PathBuf::new();
+    let mut bootrom = PathBuf::new();
 
     {
         let mut parser = ArgumentParser::new();
@@ -26,6 +28,9 @@ fn main() {
                           Print(format!("iogb: v{}", env!("CARGO_PKG_VERSION"))),
                           "Show version");
         parser.refer(&mut rom).add_option(&["-r", "--rom"], Parse, "Path to ROM file").required();
+        parser.refer(&mut bootrom)
+            .add_option(&["-b", "--bootrom"], Parse, "Path to boot ROM file")
+            .required();
         parser.parse_args_or_exit();
     }
 
@@ -37,7 +42,15 @@ fn main() {
         }
     };
 
-    let mut gb = gb::GameBoy::new(cart);
+    let bootrom = match bootrom::load_bootrom(&bootrom) {
+        Ok(b) => b,
+        Err(e) => {
+            println!("Failed to load bootrom: {} {}", bootrom.display(), e);
+            process::exit(1)
+        }
+    };
+
+    let mut gb = gb::GameBoy::new(cart, bootrom);
 
     gb.run();
 }

@@ -8,8 +8,8 @@ pub struct GameBoy {
 }
 
 impl GameBoy {
-    pub fn new(cart: cartridge::Cartridge) -> GameBoy {
-        let ic = interconnect::Interconnect::new(cart);
+    pub fn new(cart: cartridge::Cartridge, bootrom: Vec<u8>) -> GameBoy {
+        let ic = interconnect::Interconnect::new(cart, bootrom);
         GameBoy { cpu: cpu::Cpu::new(ic) }
     }
 
