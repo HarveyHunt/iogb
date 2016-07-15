@@ -44,7 +44,7 @@ impl Interconnect {
                     self.cart.read_rom(addr)
                 }
             }
-            0x0100...0x7FFF => self.cart.read_rom(addr), 
+            0x0100...0x7FFF => self.cart.read_rom(addr),
             0x8000...0x97FF => self.gpu.read_tileset(addr & 0x17FF),
             0x9800...0x9BFF => self.gpu.read_tilemap1(addr & 0x03FF),
             0x9C00...0x9FFF => self.gpu.read_tilemap2(addr & 0x03FF),
@@ -55,10 +55,10 @@ impl Interconnect {
             0xFE00...0xFE9F => self.gpu.read_oam(addr & 0x9F),
             0xFEA0...0xFEFF => 0, // Gap
             0xFF00...0xFF03 => 0, //MMIO
-            0xFF04 => self.timer.get_div(), 
-            0xFF05 => self.timer.get_tima(), 
-            0xFF06 => self.timer.get_tma(), 
-            0xFF07 => self.timer.get_tac(), 
+            0xFF04 => self.timer.get_div(),
+            0xFF05 => self.timer.get_tima(),
+            0xFF06 => self.timer.get_tma(),
+            0xFF07 => self.timer.get_tac(),
             0xFF08...0xFF0E => 0, //MMIO
             0xFF0F => self.ic.iflag,
             0xFF10...0xFF3F => 0, //MMIO
@@ -66,8 +66,8 @@ impl Interconnect {
             0xFF41 => self.gpu.read_stat(),
             0xFF42 => self.gpu.read_scy(),
             0xFF43 => self.gpu.read_scx(),
-            0xFF44 => self.gpu.read_ly(), 
-            0xFF45 => self.gpu.read_lyc(), 
+            0xFF44 => self.gpu.read_ly(),
+            0xFF45 => self.gpu.read_lyc(),
             0xFF46 => 0, //MMIO
             0xFF47 => self.gpu.read_bgp(), //MMIO
             0xFF48 => self.gpu.read_obp0(), //MMIO
@@ -76,7 +76,7 @@ impl Interconnect {
             0xFF4B => self.gpu.read_wx(),
             0xFF4C...0xFF4F => 0, //MMIO
             0xFF80...0xFFFE => self.zram[addr as usize & 0x7F],
-            0xFFFF => self.ic.ie, 
+            0xFFFF => self.ic.ie,
             _ => panic!("Can't read 0x{:04x}", addr),
         }
     }
@@ -94,10 +94,10 @@ impl Interconnect {
             0xFE00...0xFE9F => self.gpu.write_oam(addr & 0x9F, val),
             0xFEA0...0xFEFF => {} // Gap
             0xFF00...0xFF03 => {} //MMIO
-            0xFF04 => self.timer.set_div(val), 
-            0xFF05 => self.timer.set_tima(val), 
-            0xFF06 => self.timer.set_tma(val), 
-            0xFF07 => self.timer.set_tac(val), 
+            0xFF04 => self.timer.set_div(val),
+            0xFF05 => self.timer.set_tima(val),
+            0xFF06 => self.timer.set_tma(val),
+            0xFF07 => self.timer.set_tac(val),
             0xFF08...0xFF0E => {} //MMIO
             0xFF0F => self.ic.iflag = val,
             0xFF10...0xFF3F => {} //MMIO
@@ -106,7 +106,7 @@ impl Interconnect {
             0xFF42 => self.gpu.write_scy(val),
             0xFF43 => self.gpu.write_scx(val),
             0xFF44 => self.gpu.write_ly(val),
-            0xFF45 => self.gpu.write_lyc(val), 
+            0xFF45 => self.gpu.write_lyc(val),
             0xFF46 => {} //MMIO
             0xFF47 => self.gpu.write_bgp(val), //MMIO
             0xFF48 => self.gpu.write_obp0(val), //MMIO
@@ -145,11 +145,11 @@ impl Interconnect {
 impl fmt::Debug for Interconnect {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Interconnect")
-         .field("boot_mode", &self.boot_mode)
-         .field("cart", &self.cart)
-         .field("ic", &self.ic)
-         .field("timer", &self.timer)
-         .field("gpu", &self.gpu)
-         .finish()
+            .field("boot_mode", &self.boot_mode)
+            .field("cart", &self.cart)
+            .field("ic", &self.ic)
+            .field("timer", &self.timer)
+            .field("gpu", &self.gpu)
+            .finish()
     }
 }

@@ -34,12 +34,12 @@ pub struct Timer {
 impl fmt::Debug for Timer {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Timer")
-         .field("enabled", &self.enabled)
-         .field("counter", &format_args!("0x{:02x}", self.counter))
-         .field("modulo", &format_args!("0x{:02x}", self.modulo))
-         .field("counter", &format_args!("0x{:02x}", self.counter))
-         .field("input_freq", &self.input_freq)
-         .finish()
+            .field("enabled", &self.enabled)
+            .field("counter", &format_args!("0x{:02x}", self.counter))
+            .field("modulo", &format_args!("0x{:02x}", self.modulo))
+            .field("counter", &format_args!("0x{:02x}", self.counter))
+            .field("input_freq", &self.input_freq)
+            .finish()
     }
 }
 

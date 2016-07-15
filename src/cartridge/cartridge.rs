@@ -104,11 +104,11 @@ impl Cartridge {
 impl fmt::Debug for Cartridge {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Cartridge")
-         .field("title", &self.title)
-         .field("mbc", &self.mbc)
-         .field("ram_enable", &self.ram_enable)
-         .field("ram_bank", &self.ram_bank)
-         .field("rom_bank", &self.rom_bank)
-         .finish()
+            .field("title", &self.title)
+            .field("mbc", &self.mbc)
+            .field("ram_enable", &self.ram_enable)
+            .field("ram_bank", &self.ram_bank)
+            .field("rom_bank", &self.rom_bank)
+            .finish()
     }
 }
