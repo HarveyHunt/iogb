@@ -37,9 +37,12 @@ pub struct Cartridge {
 }
 
 impl Cartridge {
-    pub fn new(rom_name: path::PathBuf) -> Cartridge {
-        // TODO: Pass this error further up.
-        let buf = Cartridge::open_rom(rom_name).unwrap();
+    pub fn new(rom_name: &path::PathBuf) -> Result<Cartridge, String> {
+        let buf = match Cartridge::open_rom(rom_name) {
+            Ok(b) => b,
+            Err(e) => return Err(e),
+        };
+
         let mbc = Mbc::from_header(buf[0x147]);
         let ram_sz = match buf[0x149] {
             0x00 => 0,
@@ -53,7 +56,7 @@ impl Cartridge {
             Err(e) => panic!("Invalid utf8 {}", e),
         };
 
-        Cartridge {
+        Ok(Cartridge {
             title: title.trim_right_matches('\0').to_string(),
             mbc: mbc,
             rom: buf,
@@ -61,10 +64,10 @@ impl Cartridge {
             ram: iter::repeat(0).take(ram_sz).collect(),
             ram_bank: 0,
             ram_enable: 0,
-        }
+        })
     }
 
-    fn open_rom(path: path::PathBuf) -> Result<Vec<u8>, String> {
+    fn open_rom(path: &path::PathBuf) -> Result<Vec<u8>, String> {
         let mut data = vec![];
         let mut file = try!(File::open(path).map_err(|e| format!("{}", e)));
 

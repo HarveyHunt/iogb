@@ -5,6 +5,7 @@ extern crate argparse;
 extern crate bitflags;
 
 use std::path::PathBuf;
+use std::process;
 use argparse::{ArgumentParser, Parse, Print};
 
 mod gb;
@@ -28,7 +29,14 @@ fn main() {
         parser.parse_args_or_exit();
     }
 
-    let cart = cartridge::Cartridge::new(rom);
+    let cart = match cartridge::Cartridge::new(&rom) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("Failed to open cartridge: {} {}", rom.display(), e);
+            process::exit(1)
+        }
+    };
+
     let mut gb = gb::GameBoy::new(cart);
 
     gb.run();
