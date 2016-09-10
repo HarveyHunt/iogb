@@ -27,7 +27,7 @@ impl Mbc {
 }
 
 pub struct Cartridge {
-    title: String,
+    pub title: String,
     mbc: Mbc,
     rom: Vec<u8>,
     rom_bank: u8,

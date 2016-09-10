@@ -3,10 +3,12 @@ extern crate argparse;
 
 #[macro_use]
 extern crate bitflags;
+extern crate glium;
 
 use std::path::PathBuf;
 use std::process;
 use argparse::{ArgumentParser, Parse, Print};
+use glium::DisplayBuild;
 
 mod gb;
 mod cpu;
@@ -49,6 +51,12 @@ fn main() {
             process::exit(1)
         }
     };
+
+    let display = glium::glutin::WindowBuilder::new()
+        .with_dimensions(160, 144)
+        .with_title("iogb - ".to_owned() + &cart.title)
+        .build_glium()
+        .unwrap();
 
     let mut gb = gb::GameBoy::new(cart, bootrom);
 
