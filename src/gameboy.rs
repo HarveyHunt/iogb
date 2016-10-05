@@ -2,6 +2,8 @@ use cpu;
 use cartridge;
 use interconnect;
 
+pub const CPU_HZ: u32 = 4194304;
+
 #[derive(Debug)]
 pub struct GameBoy {
     cpu: cpu::Cpu,
@@ -13,9 +15,13 @@ impl GameBoy {
         GameBoy { cpu: cpu::Cpu::new(ic) }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, timeslice: u32) -> u32 {
+        let mut ticks = 0;
         loop {
-            self.cpu.step();
+            ticks += self.cpu.step();
+            if ticks > timeslice {
+                return ticks;
+            }
         }
     }
 }

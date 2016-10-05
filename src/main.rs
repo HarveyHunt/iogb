@@ -4,13 +4,15 @@ extern crate argparse;
 #[macro_use]
 extern crate bitflags;
 extern crate glium;
+extern crate time;
 
 use std::path::PathBuf;
 use std::process;
+use time::{SteadyTime, Duration};
 use argparse::{ArgumentParser, Parse, Print};
-use glium::DisplayBuild;
+use glium::{Surface, DisplayBuild};
 
-mod gb;
+mod gameboy;
 mod cpu;
 mod interconnect;
 mod cartridge;
@@ -58,7 +60,29 @@ fn main() {
         .build_glium()
         .unwrap();
 
-    let mut gb = gb::GameBoy::new(cart, bootrom);
+    let mut gb = gameboy::GameBoy::new(cart, bootrom);
+    let mut ticks = 0;
+    let mut delta: Duration;
+    let mut last_time = SteadyTime::now();
 
-    gb.run();
+    loop {
+        let now = SteadyTime::now();
+        delta = now - last_time;
+        last_time = now;
+
+        for event in display.poll_events() {
+            match event {
+                glium::glutin::Event::Closed => return,
+                _ => {}
+            }
+        }
+
+        // TODO: Receive VSYNC event so we can regenerate the texture
+        // from the GPU's back buffer.
+        gb.run((delta * gameboy::CPU_HZ as i32).num_seconds() as u32);
+
+        let mut target = display.draw();
+        target.clear_color(1.0, 1.0, 1.0, 1.0);
+        target.finish().unwrap();
+    }
 }
