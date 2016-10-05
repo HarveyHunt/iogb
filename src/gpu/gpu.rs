@@ -1,4 +1,5 @@
 use std::fmt;
+use gameboy::{SCREEN_W, SCREEN_H};
 use interrupt;
 
 const VRAM_TILES: usize = 384;
@@ -8,9 +9,6 @@ const HBLANK_CYCLES: i16 = 204;
 const ACCESSING_OAM_CYCLES: i16 = 80;
 const ACCESSING_VRAM_CYCLES: i16 = 172;
 const VBLANK_FULL_LINE_CYCLES: i16 = 576;
-
-const SCREEN_W: usize = 160;
-const SCREEN_H: usize = 144;
 
 #[derive(PartialEq, Debug)]
 enum Mode {
@@ -415,7 +413,7 @@ impl Gpu {
         match self.mode {
             Mode::HBlank => {
                 self.ly += 1;
-                if self.ly >= 144 {
+                if self.ly >= SCREEN_H as u8 {
                     self.change_mode(self::Mode::VBlank, ic);
                 } else {
                     self.change_mode(self::Mode::AccessingOam, ic);
