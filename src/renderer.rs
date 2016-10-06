@@ -30,19 +30,19 @@ impl Renderer {
     pub fn new<F: Facade>(display: &F) -> Renderer {
         let vertexes = [Vertex {
                             pos: [0.5, 0.5],
-                            tex_coords: [1.0, 1.0],
-                        },
-                        Vertex {
-                            pos: [0.5, -0.5],
                             tex_coords: [1.0, 0.0],
                         },
                         Vertex {
+                            pos: [0.5, -0.5],
+                            tex_coords: [1.0, 1.0],
+                        },
+                        Vertex {
                             pos: [-0.5, 0.5],
-                            tex_coords: [0.0, 1.0],
+                            tex_coords: [0.0, 0.0],
                         },
                         Vertex {
                             pos: [-0.5, -0.5],
-                            tex_coords: [0.0, 0.0],
+                            tex_coords: [0.0, 1.0],
                         }];
         let vbo = VertexBuffer::new(display, &vertexes).unwrap();
         let ibo = IndexBuffer::new(display, PrimitiveType::TrianglesList, &[2, 3, 1, 2, 0, 1])

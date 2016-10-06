@@ -463,7 +463,7 @@ impl Gpu {
 
         for i in 0..SCREEN_W {
             let x = i.wrapping_add(self.scroll_x as usize);
-            let bit = x % 8;
+            let bit = ((x % 8) as u8).wrapping_sub(7).wrapping_mul(0xff);
             let column = x >> 3;
             // The first of two rows in the tile that we are going to render.
             let tile_row = (y % 8) * 2;
