@@ -17,7 +17,7 @@ pub struct Interconnect {
     // TODO: Make this private and implement wrapper functions
     pub ic: interrupt::InterruptController,
     pub timer: timer::Timer,
-    gpu: gpu::Gpu,
+    pub gpu: gpu::Gpu,
 }
 
 impl Interconnect {

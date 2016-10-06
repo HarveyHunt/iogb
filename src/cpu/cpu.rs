@@ -6,7 +6,7 @@ use super::clk;
 pub struct Cpu {
     clk: clk::Clock,
     regs: Registers,
-    interconnect: interconnect::Interconnect,
+    pub interconnect: interconnect::Interconnect,
 }
 
 #[derive(Debug)]

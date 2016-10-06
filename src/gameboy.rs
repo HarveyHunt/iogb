@@ -26,4 +26,8 @@ impl GameBoy {
             }
         }
     }
+
+    pub fn back_buffer(&self) -> &[u8; SCREEN_W * SCREEN_H] {
+        &self.cpu.interconnect.gpu.buffer
+    }
 }

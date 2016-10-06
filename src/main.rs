@@ -3,8 +3,10 @@ extern crate argparse;
 
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
 extern crate glium;
 extern crate time;
+extern crate cgmath;
 
 use std::path::PathBuf;
 use std::process;
@@ -13,6 +15,7 @@ use argparse::{ArgumentParser, Parse, Print};
 use glium::{Surface, DisplayBuild};
 
 mod gameboy;
+mod renderer;
 mod cpu;
 mod interconnect;
 mod cartridge;
@@ -61,6 +64,7 @@ fn main() {
         .unwrap();
 
     let mut gb = gameboy::GameBoy::new(cart, bootrom);
+    let mut renderer = renderer::Renderer::new(&display);
     let mut ticks = 0;
     let mut delta: Duration;
     let mut last_time = SteadyTime::now();
@@ -81,8 +85,11 @@ fn main() {
         // from the GPU's back buffer.
         gb.run((delta * gameboy::CPU_HZ as i32).num_seconds() as u32);
 
+        renderer.update_texture(gb.back_buffer());
+
         let mut target = display.draw();
         target.clear_color(1.0, 1.0, 1.0, 1.0);
+        renderer.render(&mut target);
         target.finish().unwrap();
     }
 }

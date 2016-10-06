@@ -138,7 +138,8 @@ pub struct Gpu {
     mode: Mode,
     ticks: i16,
     oam: [Sprite; SPRITE_COUNT],
-    buffer: [u8; SCREEN_W * SCREEN_H],
+    // For a CGB, this should be [W * H * 3] to account for RGB.
+    pub buffer: [u8; SCREEN_W * SCREEN_H],
     lcd_enable: bool,
     win_tile_map: bool,
     win_enable: bool,
@@ -487,6 +488,12 @@ impl Gpu {
             // BGP so that we can get the _real_ Colour.
             let palette_colour = Colour::from_bits(colour_number);
             let colour = self.bgp.lookup(&palette_colour);
+
+            // We are going to convert this "colour" into a true RGB colour
+            // using a LUT that is passed into the fragment shader. We could
+            // iterate through the buffer and create a new buffer with RGB,
+            // but it'd be quicker and more memory efficient to just do it in
+            // the shader.
             self.buffer[start + i] = colour as u8;
         }
     }
