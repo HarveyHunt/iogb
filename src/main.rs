@@ -75,8 +75,11 @@ fn main() {
         last_time = now;
 
         for event in display.poll_events() {
+            use glium::glutin::Event;
+
             match event {
-                glium::glutin::Event::Closed => return,
+                Event::Closed => return,
+                Event::Resized(width, height) => renderer.resize(width, height),
                 _ => {}
             }
         }

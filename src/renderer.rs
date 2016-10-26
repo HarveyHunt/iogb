@@ -8,6 +8,7 @@ use cgmath;
 
 const VERT_SHADER_SRC: &'static str = include_str!("shaders/vert.glsl");
 const FRAG_SHADER_SRC: &'static str = include_str!("shaders/frag.glsl");
+const ASPECT_RATIO: f32 = SCREEN_W as f32 / SCREEN_H as f32;
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
@@ -84,6 +85,12 @@ impl Renderer {
             colour_lut: colour_lut,
             perspective: cgmath::Matrix4::<f32>::identity(),
         }
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        let new_aspect_ratio = width as f32 / height as f32;
+        let scale = ASPECT_RATIO / new_aspect_ratio;
+        self.perspective.x.x = scale;
     }
 
     pub fn update_texture(&mut self, pixels: &[u8]) {
