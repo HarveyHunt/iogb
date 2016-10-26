@@ -23,6 +23,7 @@ pub struct Renderer {
     texture: Texture2d,
     prog: Program,
     colour_lut: cgmath::Matrix4<f32>,
+    perspective: cgmath::Matrix4<f32>,
 }
 
 impl Renderer {
@@ -81,6 +82,7 @@ impl Renderer {
             texture: texture,
             prog: program,
             colour_lut: colour_lut,
+            perspective: cgmath::Matrix4::<f32>::identity(),
         }
     }
 
@@ -99,9 +101,8 @@ impl Renderer {
 
     pub fn render<S: Surface>(&self, frame: &mut S) {
         // TODO MOVE ME
-        let mut matrix = cgmath::Matrix4::identity();
         let uniforms = uniform! {
-            matrix: Into::<[[f32; 4]; 4]>::into(matrix),
+            perspective: Into::<[[f32; 4]; 4]>::into(self.perspective),
             colour_lut: Into::<[[f32; 4]; 4]>::into(self.colour_lut),
             tex: &self.texture,
         };
