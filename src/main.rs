@@ -3,19 +3,19 @@ extern crate argparse;
 
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
-extern crate glium;
 extern crate time;
-extern crate cgmath;
+
+extern crate minifb;
 
 use std::path::PathBuf;
 use std::process;
 use time::{SteadyTime, Duration};
 use argparse::{ArgumentParser, Parse, Print};
-use glium::{Surface, DisplayBuild};
+use minifb::{Key, WindowOptions, Window};
+
+use gameboy::{SCREEN_W, SCREEN_H};
 
 mod gameboy;
-mod renderer;
 mod cpu;
 mod interconnect;
 mod cartridge;
@@ -57,42 +57,30 @@ fn main() {
         }
     };
 
-    let display = glium::glutin::WindowBuilder::new()
-        .with_dimensions(160, 144)
-        .with_title("iogb - ".to_owned() + &cart.title)
-        .build_glium()
-        .unwrap();
+    let mut window = Window::new("iogb", 160, 144, WindowOptions::default()).unwrap_or_else(|e| {
+        panic!("{}", e);
+    });
 
     let mut gb = gameboy::GameBoy::new(cart, bootrom);
-    let mut renderer = renderer::Renderer::new(&display);
     let mut ticks = 0;
     let mut delta: Duration;
     let mut last_time = SteadyTime::now();
 
-    loop {
+    let mut buffer: Vec<u32> = vec![0; SCREEN_W * SCREEN_H];
+
+    while window.is_open() {
         let now = SteadyTime::now();
         delta = now - last_time;
         last_time = now;
-
-        for event in display.poll_events() {
-            use glium::glutin::Event;
-
-            match event {
-                Event::Closed => return,
-                Event::Resized(width, height) => renderer.resize(width, height),
-                _ => {}
-            }
-        }
 
         // TODO: Receive VSYNC event so we can regenerate the texture
         // from the GPU's back buffer.
         gb.run((delta * gameboy::CPU_HZ as i32).num_seconds() as u32);
 
-        renderer.update_texture(gb.back_buffer());
-
-        let mut target = display.draw();
-        target.clear_color(1.0, 1.0, 1.0, 1.0);
-        renderer.render(&mut target);
-        target.finish().unwrap();
+        // Convert from pixels in range 0..3 to full colours.
+        for (i, pixel) in gb.back_buffer().iter().enumerate() {
+            buffer[i] = (3 - *pixel as u32) * 0x404040;
+        }
+        window.update_with_buffer(&buffer[..]);
     }
 }

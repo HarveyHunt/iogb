@@ -490,10 +490,7 @@ impl Gpu {
             let colour = self.bgp.lookup(&palette_colour);
 
             // We are going to convert this "colour" into a true RGB colour
-            // using a LUT that is passed into the fragment shader. We could
-            // iterate through the buffer and create a new buffer with RGB,
-            // but it'd be quicker and more memory efficient to just do it in
-            // the shader.
+            // later.
             self.buffer[start + i] = colour as u8;
         }
     }
