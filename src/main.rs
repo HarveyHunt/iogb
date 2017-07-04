@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::process;
 use time::{SteadyTime, Duration};
 use argparse::{ArgumentParser, Parse, Print};
-use minifb::{Key, WindowOptions, Window};
+use minifb::{Key, WindowOptions, Window, Scale};
 
 use gameboy::{SCREEN_W, SCREEN_H};
 
@@ -27,6 +27,7 @@ mod bootrom;
 fn main() {
     let mut rom = PathBuf::new();
     let mut bootrom = PathBuf::new();
+    let mut scale: u32 = 1;
 
     {
         let mut parser = ArgumentParser::new();
@@ -35,6 +36,7 @@ fn main() {
                           Print(format!("iogb: v{}", env!("CARGO_PKG_VERSION"))),
                           "Show version");
         parser.refer(&mut rom).add_option(&["-r", "--rom"], Parse, "Path to ROM file").required();
+        parser.refer(&mut scale).add_option(&["-s", "--scale"], Parse, "Display scaling");
         parser.refer(&mut bootrom)
             .add_option(&["-b", "--bootrom"], Parse, "Path to boot ROM file")
             .required();
@@ -57,9 +59,27 @@ fn main() {
         }
     };
 
-    let mut window = Window::new("iogb", 160, 144, WindowOptions::default()).unwrap_or_else(|e| {
-        panic!("{}", e);
-    });
+    let scale = match scale {
+        1 => Scale::X1,
+        2 => Scale::X2,
+        4 => Scale::X4,
+        8 => Scale::X8,
+        16 => Scale::X16,
+        32 => Scale::X32,
+        s => {
+            println!("Invalid scale option: {}", s);
+            println!("Possible scale options: 1, 2, 4, 8, 16, 32");
+            process::exit(1)
+        }
+    };
+
+    let mut window = Window::new("iogb",
+                                 160,
+                                 144,
+                                 WindowOptions { scale: scale, ..WindowOptions::default() })
+        .unwrap_or_else(|e| {
+            panic!("{}", e);
+        });
 
     let mut gb = gameboy::GameBoy::new(cart, bootrom);
     let mut ticks = 0;
