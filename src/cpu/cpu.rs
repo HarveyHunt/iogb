@@ -247,11 +247,25 @@ impl Registers {
 
 impl Cpu {
     pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
-        Cpu {
+        let mut cpu = Cpu {
             clk: clk::Clock::default(),
             regs: Registers::default(),
             interconnect: interconnect,
-        }
+        };
+
+        if !cpu.interconnect.brom.is_used() {
+            cpu.fake_boot_regs();
+        };
+
+        cpu
+    }
+
+    fn fake_boot_regs(&mut self) {
+        self.regs.writew(self::RegsW::AF, 0x01B0);
+        self.regs.writew(self::RegsW::BC, 0x0013);
+        self.regs.writew(self::RegsW::DE, 0x00D8);
+        self.regs.writew(self::RegsW::HL, 0x014D);
+        self.regs.writew(self::RegsW::SP, 0xFFFE);
     }
 
     fn print_stacktrace(&self) {

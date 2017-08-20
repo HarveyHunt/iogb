@@ -10,7 +10,7 @@ extern crate minifb;
 use std::path::PathBuf;
 use std::process;
 use time::{SteadyTime, Duration};
-use argparse::{ArgumentParser, Parse, Print};
+use argparse::{ArgumentParser, Parse, Print, StoreOption};
 use minifb::{Key, WindowOptions, Window, Scale};
 
 use gameboy::{SCREEN_W, SCREEN_H};
@@ -26,7 +26,7 @@ mod bootrom;
 
 fn main() {
     let mut rom = PathBuf::new();
-    let mut bootrom = PathBuf::new();
+    let mut bootrom_path = PathBuf::new();
     let mut scale: u32 = 1;
 
     {
@@ -37,9 +37,8 @@ fn main() {
                           "Show version");
         parser.refer(&mut rom).add_option(&["-r", "--rom"], Parse, "Path to ROM file").required();
         parser.refer(&mut scale).add_option(&["-s", "--scale"], Parse, "Display scaling");
-        parser.refer(&mut bootrom)
-            .add_option(&["-b", "--bootrom"], Parse, "Path to boot ROM file")
-            .required();
+        parser.refer(&mut bootrom_path)
+            .add_option(&["-b", "--bootrom"], Parse, "Path to boot ROM file");
         parser.parse_args_or_exit();
     }
 
@@ -51,10 +50,18 @@ fn main() {
         }
     };
 
-    let bootrom = match bootrom::load_bootrom(&bootrom) {
+    let bootrom_path = if bootrom_path == PathBuf::from("") {
+        None
+    } else {
+        Some(&bootrom_path)
+    };
+
+    let bootrom = match bootrom::Bootrom::from_pathbuf(bootrom_path) {
         Ok(b) => b,
         Err(e) => {
-            println!("Failed to load bootrom: {} {}", bootrom.display(), e);
+            println!("Failed to load bootrom: {} {}",
+                     bootrom_path.unwrap().display(),
+                     e);
             process::exit(1)
         }
     };

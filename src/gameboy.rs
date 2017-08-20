@@ -1,6 +1,7 @@
 use cpu;
 use cartridge;
 use interconnect;
+use bootrom;
 
 pub const CPU_HZ: u32 = 4194304;
 pub const SCREEN_W: usize = 160;
@@ -12,7 +13,7 @@ pub struct GameBoy {
 }
 
 impl GameBoy {
-    pub fn new(cart: cartridge::Cartridge, bootrom: Vec<u8>) -> GameBoy {
+    pub fn new(cart: cartridge::Cartridge, bootrom: bootrom::Bootrom) -> GameBoy {
         let ic = interconnect::Interconnect::new(cart, bootrom);
         GameBoy { cpu: cpu::Cpu::new(ic) }
     }

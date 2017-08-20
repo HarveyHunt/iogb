@@ -4,12 +4,13 @@ use interrupt;
 use cartridge;
 use timer;
 use gpu;
+use bootrom;
 
 const WRAM_SZ: usize = 0x2000;
 const ZRAM_SZ: usize = 0x7F;
 
 pub struct Interconnect {
-    brom: Vec<u8>, // 0x0000 -> 0x00FF
+    pub brom: bootrom::Bootrom, // 0x0000 -> 0x00FF
     wram: [u8; WRAM_SZ], // 0xC000 -> 0xDFFF, shadowed @ 0xE000 -> 0xFDFF
     zram: [u8; ZRAM_SZ], // 0xFF80 -> 0xFFFF
     cart: cartridge::Cartridge,
@@ -21,8 +22,8 @@ pub struct Interconnect {
 }
 
 impl Interconnect {
-    pub fn new(cart: cartridge::Cartridge, bootrom: Vec<u8>) -> Interconnect {
-        Interconnect {
+    pub fn new(cart: cartridge::Cartridge, bootrom: bootrom::Bootrom) -> Interconnect {
+        let mut ic = Interconnect {
             brom: bootrom,
             wram: [0; WRAM_SZ],
             zram: [0; ZRAM_SZ],
@@ -31,14 +32,55 @@ impl Interconnect {
             ic: interrupt::InterruptController::new(),
             timer: timer::Timer::new(),
             gpu: gpu::Gpu::new(),
+        };
+
+        if !ic.brom.is_used() {
+            ic.fake_boot_rom();
         }
+        ic
+    }
+
+    pub fn fake_boot_rom(&mut self) {
+        // Taken from the legendary pandocs.
+        // http://bgb.bircd.org/pandocs.htm
+        self.writew(0xFF05, 0x00);   // TIMA
+        self.writew(0xFF06, 0x00);   // TMA
+        self.writew(0xFF07, 0x00);   // TAC
+        self.writew(0xFF10, 0x80);   // NR10
+        self.writew(0xFF11, 0xBF);   // NR11
+        self.writew(0xFF12, 0xF3);   // NR12
+        self.writew(0xFF14, 0xBF);   // NR14
+        self.writew(0xFF16, 0x3F);   // NR21
+        self.writew(0xFF17, 0x00);   // NR22
+        self.writew(0xFF19, 0xBF);   // NR24
+        self.writew(0xFF1A, 0x7F);   // NR30
+        self.writew(0xFF1B, 0xFF);   // NR31
+        self.writew(0xFF1C, 0x9F);   // NR32
+        self.writew(0xFF1E, 0xBF);   // NR33
+        self.writew(0xFF20, 0xFF);   // NR41
+        self.writew(0xFF21, 0x00);   // NR42
+        self.writew(0xFF22, 0x00);   // NR43
+        self.writew(0xFF23, 0xBF);   // NR30
+        self.writew(0xFF24, 0x77);   // NR50
+        self.writew(0xFF25, 0xF3);   // NR51
+        self.writew(0xFF26, 0xF1);   // NR52
+        self.writew(0xFF40, 0x91);   // LCDC
+        self.writew(0xFF42, 0x00);   // SCY
+        self.writew(0xFF43, 0x00);   // SCX
+        self.writew(0xFF45, 0x00);   // LYC
+        self.writew(0xFF47, 0xFC);   // BGP
+        self.writew(0xFF48, 0xFF);   // OBP0
+        self.writew(0xFF49, 0xFF);   // OBP1
+        self.writew(0xFF4A, 0x00);   // WY
+        self.writew(0xFF4B, 0x00);   // WX
+        self.writew(0xFFFF, 0x00);   // IE
     }
 
     pub fn readb(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x00FF => {
                 if self.boot_mode {
-                    self.brom[addr as usize]
+                    self.brom.readb(addr)
                 } else {
                     self.cart.read_rom(addr)
                 }
