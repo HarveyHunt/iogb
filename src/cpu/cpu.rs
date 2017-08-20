@@ -1477,7 +1477,7 @@ impl Cpu {
     // Z N H C
     // - - - - 4
     fn ei(&mut self) -> u32 {
-        self.interconnect.ic.ime = true;
+        self.interconnect.ic.enable_all_interrupts(1);
         4
     }
 
@@ -1485,7 +1485,7 @@ impl Cpu {
     // Z N H C
     // - - - - 4
     fn di(&mut self) -> u32 {
-        self.interconnect.ic.ime = false;
+        self.interconnect.ic.enable_all_interrupts(0);
         4
     }
 

@@ -74,4 +74,8 @@ impl InterruptController {
     pub fn request_interrupt(&mut self, int: Interrupt) {
         self.iflag |= int as u8;
     }
+
+    pub fn enable_all_interrupts(&mut self, val: u8) {
+        self.ime = val != 0
+    }
 }
