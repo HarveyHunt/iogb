@@ -1069,7 +1069,7 @@ impl Cpu {
 
         self.set_flag(Z, out == 0);
         self.set_flag(N, true);
-        self.set_flag(H, a & 0xF < val & 0xF + c);
+        self.set_flag(H, a & 0xF < (val & 0xF) + c);
         self.set_flag(C, (a as u16) < (val as u16) + (c as u16));
         self.regs.writeb(self::RegsB::A, out);
         // TODO: Need to reflect how the timing is different for (r) and r.
