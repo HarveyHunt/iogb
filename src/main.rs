@@ -10,8 +10,8 @@ extern crate minifb;
 use std::path::PathBuf;
 use std::process;
 use time::{SteadyTime, Duration};
-use argparse::{ArgumentParser, Parse, Print, StoreOption};
-use minifb::{Key, WindowOptions, Window, Scale};
+use argparse::{ArgumentParser, Parse, Print};
+use minifb::{WindowOptions, Window, Scale};
 
 use gameboy::{SCREEN_W, SCREEN_H};
 
