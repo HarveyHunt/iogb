@@ -273,7 +273,7 @@ impl Gpu {
         self.win_enable = (val & 0x20) != 0;
         self.bg_tile_set = (val & 0x10) != 0;
         self.bg_tile_map = (val & 0x08) != 0;
-        self.obj_size = ((val & 0x04) == 16) as u8;
+        self.obj_size = if (val & 0x04) != 0 { 16 } else { 8 };
         self.obj_enable = (val & 0x02) != 0;
         self.bg_enable = (val & 0x01) != 0;
     }
