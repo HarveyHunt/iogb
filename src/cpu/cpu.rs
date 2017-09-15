@@ -279,8 +279,6 @@ impl Cpu {
     }
 
     fn crash(&self, cause: String) -> ! {
-        println!("{:?}", self.regs);
-
         let mut code: String = "Code:".to_owned();
         for pc in (self.regs.pc - 5)..(self.regs.pc + 4) {
             if (pc + 1) == self.regs.pc {
