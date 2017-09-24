@@ -1,14 +1,18 @@
 # iogb
 A GameBoy emulator written in Rust
 
-# Running
-```iogb``` should be run using cargo. Pass the path to your ROM file using ```-r / --rom``` and the path to your GB Bootrom using ```-b / --bootrom```.
+## Usage
+```iogb``` should be run using cargo. Pass the path to your ROM file using ```-r / --rom```.
 
 ```
-cargo run -- --rom ~/legal_rom.gb --bootrom brom.gb
+cargo run -- --rom ~/legal_rom.gb
 ```
 
-# TODO
+The following command line arguments **may** be passed to ```iogb```:
+- ```-s```, ```--scale``` The displaying scaling to use (1, 2, 4, 8, 16, 32)
+- ```-b```, ```--bootrom``` The path to a gameboy bootrom
+
+## TODO
 - CPU
   - Implement all instructions
   - Switch to cycle accurate timing
@@ -27,18 +31,12 @@ cargo run -- --rom ~/legal_rom.gb --bootrom brom.gb
   - Implement MBC3
   - Implement MBC5
 - Interface
-  - Render texture from GPU back buffer
-    - Create OpenGL window using glium
-    - Write fragment and vertex shaders (helpful for applying effects)
-    - Configure texture coords
-    - Render back buffer onto a quad as a texture
   - Pass inputs to GB
 - Misc
   - Implement Gameboy Colour
   - Consider project layout
   - Fix TODOs
   - Pass all of Blargg's tests
-  - OPEN SOURCE!
   
 # Special Thanks
 - [Mooneye GB](https://github.com/Gekkio/mooneye-gb)
