@@ -4,9 +4,9 @@ use interrupt;
 #[derive(Debug)]
 enum InputClockFreq {
     Freq4096 = 4096,
-    Freq262144 = 262144,
-    Freq65536 = 65536,
-    Freq16384 = 16384,
+    Freq262144 = 262_144,
+    Freq65536 = 65_536,
+    Freq16384 = 16_384,
 }
 
 impl InputClockFreq {

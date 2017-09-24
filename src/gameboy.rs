@@ -3,7 +3,7 @@ use cartridge;
 use interconnect;
 use bootrom;
 
-pub const CPU_HZ: u32 = 4194304;
+pub const CPU_HZ: u32 = 4_194_304;
 pub const SCREEN_W: usize = 160;
 pub const SCREEN_H: usize = 144;
 
