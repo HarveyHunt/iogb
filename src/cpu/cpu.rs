@@ -394,6 +394,7 @@ impl Cpu {
             0x07 => self.rlca(),
             0x08 => self.ldw_nn_sp(),
             0x09 => self.addw(BC),
+            0x10 => self.stop(),
             0x0A => self.ld(A, self::IndirectAddr::BC),
             0x0B => self.decw(BC),
             0x0C => self.inc(C),
@@ -903,6 +904,13 @@ impl Cpu {
                                    self.regs.pc));
             }
         }
+    }
+
+    // STOP
+    // Z N H C
+    // - - - - : 4
+    fn stop(&mut self) -> ! {
+        panic!("STOP");
     }
 
     // INC ss
