@@ -620,6 +620,7 @@ impl Cpu {
             0xF5 => self.push(AF),
             0xF6 => self.or(self::ImmediateB),
             0xF7 => self.rst(0x30),
+            0xF8 => self.ldw_hl_sp(),
             0xF9 => self.ldw(SP, HL),
             0xFA => self.ld(A, self::IndirectAddr::AddressW),
             0xFB => self.ei(),
@@ -978,6 +979,22 @@ impl Cpu {
         let sp = self.regs.readw(self::RegsW::SP);
         self.interconnect.writew(addr, sp);
         20
+    }
+
+    // LD HL SP+r8
+    // Z N H C
+    // 0 0 H C : 12
+    fn ldw_hl_sp(&mut self) -> u32 {
+        use self::Flags::*;
+        let offset = self.fetchb() as i8 as u16;
+        let sp = self.regs.readw(self::RegsW::SP);
+        self.regs.writew(self::RegsW::HL, sp.wrapping_add(offset));
+
+        self.set_flag(Z, false);
+        self.set_flag(N, false);
+        self.set_flag(H, (offset & 0x000F) + (sp & 0x000F) > 0x000F);
+        self.set_flag(C, (offset & 0x00FF) + (sp & 0x00FF) > 0x00FF);
+        12
     }
 
     // ADD HL ss
