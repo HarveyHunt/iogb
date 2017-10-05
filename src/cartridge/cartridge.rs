@@ -20,7 +20,7 @@ impl Mbc {
     fn from_header(byte: u8) -> Mbc {
         match byte {
             0x00 => Mbc::None,
-            0x01 | 0x02 | 0x03  => Mbc::One,
+            0x01 | 0x02 | 0x03 => Mbc::One,
             inv => panic!("Unknown MBC type: 0x{:02x}", inv),
         }
     }
@@ -33,7 +33,8 @@ pub struct Cartridge {
     rom_bank: u8,
     ram: Vec<u8>,
     ram_bank: u8,
-    ram_enable: u8,
+    ram_enable: bool,
+    rom_mode_select: bool,
 }
 
 impl Cartridge {
@@ -63,7 +64,8 @@ impl Cartridge {
             rom_bank: 1,
             ram: iter::repeat(0).take(ram_sz).collect(),
             ram_bank: 0,
-            ram_enable: 0,
+            ram_enable: false,
+            rom_mode_select: false,
         })
     }
 
@@ -79,10 +81,11 @@ impl Cartridge {
         let a = match self.mbc {
             Mbc::None => addr as usize,
             Mbc::One => {
-                if (addr as usize) < ROM_BANK_SZ {
-                    addr as usize
+                let uaddr = addr as usize;
+                if uaddr < ROM_BANK_SZ {
+                    uaddr
                 } else {
-                    addr as usize + (self.rom_bank as usize * ROM_BANK_SZ)
+                    (uaddr & 0x3FFF) | (self.rom_bank as usize * ROM_BANK_SZ)
                 }
             }
         };
@@ -90,14 +93,48 @@ impl Cartridge {
     }
 
     pub fn read_ram(&self, addr: u16) -> u8 {
-        if self.ram_enable == 0xA && self.ram.is_empty() {
-            self.ram[((addr as usize & (RAM_BANK_SZ - 1)) + (self.ram_bank as usize * RAM_BANK_SZ))]
+        if self.ram_enable == true {
+            let bank = if self.rom_mode_select {
+                0
+            } else {
+                self.ram_bank
+            };
+            self.ram[((addr as usize & (RAM_BANK_SZ - 1)) + (bank as usize * RAM_BANK_SZ))]
         } else {
             0 //TODO: Is this correct?
         }
     }
 
-    pub fn write_rom(&self, addr: u16, val: u8) {}
+    pub fn write_rom(&mut self, addr: u16, val: u8) {
+        match self.mbc {
+            Mbc::None => {}
+            Mbc::One => {
+                match addr {
+                    0x0000...0x1FFF => self.ram_enable = (val == 0xA),
+                    0x2000...0x3FFF => {
+                        // Clear the lower bits, but keep the upper rom bank bits.
+                        self.rom_bank &= 0x60;
+                        self.rom_bank |= if val & 0x1F == 0 {
+                            1
+                        } else {
+                            val & 0x1F
+                        }
+                    }
+                    0x4000...0x5FFF => {
+                        if self.rom_mode_select {
+                            self.rom_bank &= 0x1F;
+                            self.rom_bank |= (val & 0x03) << 5;
+                        } else {
+                            self.ram_bank = val & 0x03;
+                        }
+                    }
+                    0x6000...0x7FFF => self.rom_mode_select = (val & 0x01) == 1,
+                    _ => panic!("Can't write 0x{:02x} to 0x{:04x}", val, addr),
+                }
+            }
+        }
+    }
+
     pub fn write_ram(&self, addr: u16, val: u8) {}
 }
 
