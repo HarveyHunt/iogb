@@ -910,7 +910,7 @@ impl Cpu {
     // Z N H C
     // - - - - : 4
     fn stop(&mut self) -> ! {
-        panic!("STOP");
+        self.crash("STOP".to_owned());
     }
 
     // INC ss
